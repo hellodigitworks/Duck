@@ -27,6 +27,12 @@ import DuckCore
 ///   takes it down to a single point, which is why Duck leaves no gap in the bar. The trick
 ///   comes from Ice, and Ice's own note is that a future macOS could take it away: if the
 ///   constraint is not found, the items simply rest at 16pt as they used to.
+///
+/// One thing this cannot do: a spacer only pushes what is on its left. macOS hands out
+/// menu bar slots and remembers them, so another app's icon can end up sitting between
+/// Duck's last spacer and the mark, and dragging the mark rightwards leaves the spacers
+/// behind. Those icons are out of reach at any width. Duck measures the gap and says so
+/// rather than hiding some and calling it done.
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let preferences: Preferences
     private let updates: UpdateCheck
@@ -46,6 +52,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private static let rampDelay = 0.05
 
     private(set) var isCollapsed = false
+    /// Points of other apps' icons sitting between Duck's rightmost spacer and the mark.
+    /// A spacer only pushes what is on its left, so nothing here can be hidden at any width.
+    private(set) var strandedWidth: CGFloat = 0
     private var autoHideTimer: Timer?
     private var rolesRefresh: DispatchWorkItem?
     private var rampToken = 0
@@ -58,7 +67,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     var openPreferences: (() -> Void)?
 
     private enum MenuTag: Int {
-        case showHide = 1, autoHide, update
+        case showHide = 1, autoHide, update, stranded, strandedRule
     }
 
     init(preferences: Preferences, updates: UpdateCheck) {
@@ -177,7 +186,45 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             configureRoles()
             Log.note("Roles reassigned by position: \(layoutDescription())")
         }
+        measureStranded(mark: newMark, spacers: newSpacers)
         return true
+    }
+
+    /// The gap between the rightmost spacer's right edge and the mark's left edge. Anything
+    /// in there belongs to another app and sits on the wrong side of every spacer Duck has,
+    /// so widening cannot move it off the bar. Only meaningful while showing.
+    private func measureStranded(mark: NSStatusItem, spacers: [NSStatusItem]) {
+        guard let markFrame = mark.button?.window?.frame, markFrame.origin.x > 0 else { return }
+        let nearest = spacers
+            .compactMap { $0.button?.window?.frame }
+            .filter { $0.origin.x > 0 }
+            .map(\.maxX)
+            .max()
+        guard let nearest else { return }
+        // A point or two is rounding, not another app's icon.
+        let gap = max(0, markFrame.origin.x - nearest)
+        let measured = gap < 8 ? 0 : gap
+        guard abs(measured - strandedWidth) > 1 else { return }
+        strandedWidth = measured
+        applyMarkTooltip()
+        if measured > 0 {
+            Log.note("Out of reach: \(Int(measured))pt of other icons sit between Duck's last spacer and the mark. Widening cannot move them. \(layoutDescription())")
+        } else {
+            Log.note("Back in reach: Duck's spacers are next to the mark again.")
+        }
+    }
+
+    /// How many icons that gap is worth. Menu bar items run about 32pt, so this is a count
+    /// a person can check against the bar, not a measurement.
+    private var strandedIcons: Int {
+        guard strandedWidth > 0 else { return 0 }
+        return max(1, Int((strandedWidth / 32).rounded()))
+    }
+
+    private func applyMarkTooltip() {
+        mark.button?.toolTip = strandedWidth > 0
+            ? "Click to hide or show the icons to the left. \(strandedIcons) of them cannot be hidden from here: drag them further left. Right-click for options."
+            : "Click to hide or show the icons to the left. Right-click for options."
     }
 
     /// Gives every item the look and behaviour of its current role.
@@ -195,8 +242,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             button.target = self
             button.action = #selector(markClicked)
             _ = button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = "Click to hide or show the icons to the left. Right-click for options."
         }
+        applyMarkTooltip()
         applyLayout()
     }
 
@@ -260,7 +307,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 let settled = min(total + 200, limit)
                 self.share(settled, across: items)
                 self.remember(total)
-                Log.note("Hidden with \(Int(settled))pt (ceiling \(Int(self.widthCeiling)) × \(items.count)), opened at \(Int(self.startingWidth)): \(self.layoutDescription())")
+                let short = self.strandedWidth > 0 ? ", \(Int(self.strandedWidth))pt still showing out of reach" : ""
+                Log.note("Hidden with \(Int(settled))pt (ceiling \(Int(self.widthCeiling)) × \(items.count)), opened at \(Int(self.startingWidth))\(short): \(self.layoutDescription())")
                 return
             }
             Log.note("Ramp \(Int(total))pt, far edge \(Int(edge))")
@@ -526,6 +574,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         Duck \(version) on macOS \(ProcessInfo.processInfo.operatingSystemVersionString)
         Screens: \(screens.joined(separator: "; "))
         State: \(isCollapsed ? "hidden" : "showing"), ceiling \(Int(widthCeiling))pt, remembered \(Int(preferences.hidingWidth))pt for a \(Int(preferences.hidingBarWidth))pt bar
+        Out of reach: \(strandedWidth > 0 ? "\(Int(strandedWidth))pt, about \(strandedIcons) icon(s) between the last spacer and the mark" : "none")"
         Items: \(layoutDescription())
         Bar: \(barSnapshot())
 
@@ -546,6 +595,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func makeContextMenu() -> NSMenu {
         let menu = NSMenu()
         menu.delegate = self
+
+        // Only there when another app's icon has landed between Duck's spacers and the
+        // mark. Nothing to click: it says what happened and what to do about it.
+        let stranded = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        stranded.tag = MenuTag.stranded.rawValue
+        stranded.isEnabled = false
+        stranded.isHidden = true
+        menu.addItem(stranded)
+
+        let strandedRule = NSMenuItem.separator()
+        strandedRule.tag = MenuTag.strandedRule.rawValue
+        strandedRule.isHidden = true
+        menu.addItem(strandedRule)
 
         let showHide = NSMenuItem(title: "Hide icons", action: #selector(menuToggle), keyEquivalent: "")
         showHide.target = self
@@ -584,6 +646,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
+        let count = strandedIcons
+        if let item = menu.item(withTag: MenuTag.stranded.rawValue) {
+            item.isHidden = count == 0
+            item.title = count == 1
+                ? "1 icon cannot be hidden — drag it further left"
+                : "\(count) icons cannot be hidden — drag them further left"
+        }
+        menu.item(withTag: MenuTag.strandedRule.rawValue)?.isHidden = count == 0
         menu.item(withTag: MenuTag.showHide.rawValue)?.title = isCollapsed ? "Show hidden icons" : "Hide icons"
         menu.item(withTag: MenuTag.autoHide.rawValue)?.state = preferences.autoHide ? .on : .off
         if let item = menu.item(withTag: MenuTag.update.rawValue) {
