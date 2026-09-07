@@ -196,7 +196,7 @@ struct MarkChip: View {
     }
 
     private func glyph(_ fraction: CGFloat) -> some View {
-        Image(nsImage: Mark.image(style: style, fraction: fraction))
+        Image(nsImage: Mark.image(style: style, fraction: fraction, edged: false))
             .renderingMode(.template)
             .resizable()
             .frame(width: 14, height: 14)
