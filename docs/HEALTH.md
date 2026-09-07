@@ -1,33 +1,39 @@
 # Duck health
 
-Status: AMBER. First record, and nothing is wrong with the app: everything live answers, the page is internally consistent and the five undeployed commits are a pending deploy, not a fault. The AMBER is about us, not it. This app has been live on its own domain since 5 Sep and was in no run until tonight, because it was in no registry, and its tier is still Code Review's reading rather than his decision.
-Checked: 2026-09-06 23:58 IST, baseline
+Status: AMBER. The app is healthy and the pending deploy is gone: the new mark shipped 22 hours ago and the live site now serves it, with every icon, the manifest and the share image answering at the versions the page asks for. One thing is left and it is not a fault: its tier here is still Code Review's reading, not his.
+Checked: 2026-09-08 00:55 IST, daily
 
 ## Live
 | Address | Result | Note |
 |---|---|---|
-| https://duck.hellodigitworks.com/ | 200, 5.9 KB, html | title Duck, og:image 200 at 180 KB, manifest 200 with icons, apple-touch-icon 200, favicon.svg and favicon-32 200. Absolute URLs all name the served host. 0 console errors, 0 failed requests, desktop and phone |
-| https://tuck-2nv.pages.dev/ | 200, 5.9 KB, html | the project address, identical. The project kept its first name, only the domain changed |
-| https://duck.hellodigitworks.com/install.sh | 200, 2,161 B, x-sh | the Install button copies a one-line command that fetches this. It serves the real script, not the fallback page |
-| https://github.com/hellodigitworks/Duck/releases/latest/download/Duck.zip | 200, 410 KB, octet-stream | the download the readme points at. Answers, and it is GitHub's to serve, not ours |
-| https://duck.hellodigitworks.com/fonts/fraunces.woff2 | 200, 65,912 B, woff2 | the live page's display font. Consistent with the live CSS |
-| https://duck.hellodigitworks.com/wrangler.toml | 200, 550 B, toml | published because the deploy root is the site folder. It holds a project name, an output path and a date, no id and no secret, and the file explains itself. Same shape as lab's, recorded rather than flagged |
+| https://duck.hellodigitworks.com/ | 200, 7 KB, html | 0 console errors, 0 failed requests, desktop and phone |
+| https://duck.hellodigitworks.com/images/og.png?v=5 | 200, 123,039 B, image/png | the new mark, at the version the page asks for |
+| https://duck.hellodigitworks.com/images/favicon.svg?v=4 | 200, 3,239 B, image/svg+xml | ok |
+| https://duck.hellodigitworks.com/images/favicon-32.png?v=3 | 200, 963 B, image/png | ok |
+| https://duck.hellodigitworks.com/images/apple-touch-icon.png?v=3 | 200, 10,181 B, image/png | ok |
+| https://duck.hellodigitworks.com/site.webmanifest?v=3 | 200, 516 B, manifest+json | ok |
+| https://duck.hellodigitworks.com/css/duck.css?v=3 | 200, 6,100 B, text/css | ok |
+| https://duck.hellodigitworks.com/media/install.mp4?v=3 | 200, 2,161,687 B, video/mp4 | the install clip, real video and not the fallback page |
+| https://duck.hellodigitworks.com/install.sh | 200, 2,161 B, x-sh | the real script, not the fallback page |
+| https://tuck-2nv.pages.dev/ | 200, 7 KB, html | the project address, identical |
 
 ## Deploy state
 
-- Local ahead by 5 commits since the last deploy. Production is `0754ae63`, commit `de3e7f6`, 22 hours old, and it is self-consistent: the live page asks for the old fonts and the old icon versions, and every one of them answers 200. Nothing is half-shipped.
-- Last commit: 2026-09-06, 2783cba The duck is a black print now, and everything that shows it is remade
-- Last deploy: 22 hours before this run, commit `de3e7f6`, read from `wrangler pages deployment list --project-name tuck`
-- Uncommitted: none. Local main is level with origin/main
-- Deploys by: `npx wrangler pages deploy site --project-name tuck --branch main`, or the same line with `.` from inside site/, which is what the folder's own wrangler.toml documents
+- In sync for everything that publishes. Production is `5a5059b3`, commit `dd98acf`, 22 hours old. Four commits sit on top of it and not one touches `site/`: they are the Swift app, the README and a cask script, none of which the website deploy carries.
+- Last commit: 2026-09-07, 8f261d5 The mark carries the line
+- Last deploy: 22 hours before this run, commit `dd98acf`, read from `wrangler pages deployment list --project-name tuck`
+- Uncommitted: none. Local main is 3 ahead of origin/main
+- Deploys by: `npx wrangler pages deploy site --project-name tuck --branch main`
 
 ## Open issues
 | # | Sev | What | Where | Since | Proposed fix | Decision |
 |---|---|---|---|---|---|---|
 | 1 | AMBER | The app was not in the registry, so from the day it went live nothing checked it. It was found tonight only because it appeared as a row on lab. Its tier here is Code Review's reading, not a decision he has made | Code Review/apps.json | 2026-09-05 | Added to the registry tonight as tier 1, so it is in the daily from now on. He confirms or changes the tier | needs Swayam |
-| 2 | low | Five commits are built and not deployed: a new hand-drawn mark, the app icon made from it, a display typeface swap, and every icon and share image regenerated at `?v=3` and `?v=4`. Live still serves the previous set at `?v=2` | site/, icons/ | 2026-09-06 | A deploy, when he wants it. Never Code Review's to run for a change this size | needs Swayam |
+| 2 | low | Five commits are built and not deployed: a new hand-drawn mark, the app icon made from it, a display typeface swap, and every icon and share image regenerated at `?v=3` and `?v=4`. Live still serves the previous set at `?v=2` | site/, icons/ | 2026-09-06 | A deploy, when he wants it. Never Code Review's to run for a change this size | closed 2026-09-07, not by Code Review: deployed at `dd98acf`, and the live page's own `?v=` versions were fetched one by one and all answer |
 
 ## Reviewed changes
+- 2026-09-07: nine commits. `8711941` adds a Homebrew cask list, `0a91b98` says when icons are out of reach, `c92c586` moves the five items together, `8f261d5` carries the line through the mark; earlier in the day `fae816b` and `dd98acf` shipped 1.4.1 and 1.4.2, the approved window layout and a Dock tile that follows dark mode, and `9309398`, `f9703c8` and `7556af7` put the install clip on the page at 4K. ok as a set. Four of the nine changed `site/` and were deployed; the last four are Swift, README and the cask script and change nothing the website serves, so the site is not waiting on anything. Open issue 2 closes: the mark, its icons and its share image are live, checked by fetching each one at the exact version the page asks for
+
 - 2026-09-06: five commits, none deployed. `8a47b50` draws the mark by hand and builds the app icon from it. `fa84d56` adds a Show in Dock preference, off by default. `faa4cd7` swaps the display typeface into the window title, the page headline and the pictures. `0c5ccc4` removes the old typeface and its licence file from both the app and the site, and cuts the font builder down to one family. `2783cba` remakes every icon, favicon and share image from the new mark and bumps the page to `?v=3` and `?v=4`, with the service worker bumped alongside. ok as a set: the version stamps and the service worker moved together, the removed font is gone from the CSS as well as the folder, and the page in the folder is consistent with the files in the folder. The live site is consistent with itself at the older version, so nothing is broken while the deploy waits
 - 2026-09-06: baseline read of the folder. No secret in a tracked file, no real client or person name, no console.log in the shipping page, every internal href in the page resolves to a file that exists both in the folder and live at the version that page asks for. The download link points at the GitHub release rather than anything hosted here
 
