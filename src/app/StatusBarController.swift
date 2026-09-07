@@ -38,7 +38,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let updates: UpdateCheck
 
     /// Every item Duck owns, in creation order. Position decides which is the mark.
-    private let items: [NSStatusItem]
+    private var items: [NSStatusItem]
+    /// The names this seating goes by, mark first. Kept so the older ones can be dropped.
+    private var seatedNames: [String]
     /// The width constraint macOS puts on each item, kept so it can be switched off.
     private var widthHolders: [ObjectIdentifier: NSLayoutConstraint] = [:]
 
@@ -55,6 +57,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Points of other apps' icons sitting between Duck's rightmost spacer and the mark.
     /// A spacer only pushes what is on its left, so nothing here can be hidden at any width.
     private(set) var strandedWidth: CGFloat = 0
+    /// True while the items are being made again, so nothing reads half a menu bar.
+    private var reseating = false
+    private var reseatWork: DispatchWorkItem?
     private var autoHideTimer: Timer?
     private var rolesRefresh: DispatchWorkItem?
     private var rampToken = 0
@@ -74,26 +79,23 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         self.preferences = preferences
         self.updates = updates
 
-        // Creation order: each new item lands to the left of the previous one, so the
-        // first one made is the one the user ends up clicking.
-        let first = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        first.autosaveName = "duck.toggle"
-        let rest = (0..<StatusBarController.spacerCount(for: NSScreen.screens)).map { index -> NSStatusItem in
-            let spacer = NSStatusBar.system.statusItem(withLength: 0)
-            spacer.autosaveName = "duck.spacer\(index)"
-            return spacer
-        }
-        items = [first] + rest
-        mark = first
-        spacers = rest
+        // Seated fresh on every launch, so the five always come back as one unbroken run
+        // with the mark on its right end. Names carry the seating number because macOS only
+        // honours a position for a name it has never seen.
+        preferences.seating += 1
+        let names = Seating.names(
+            spacers: StatusBarController.spacerCount(for: NSScreen.screens),
+            seating: preferences.seating)
+        Seating.claim(names, from: preferences.seat)
+        seatedNames = names
+        let made = StatusBarController.makeItems(named: names)
+        items = made
+        mark = made[0]
+        spacers = Array(made.dropFirst())
         super.init()
 
-        for (index, item) in items.enumerated() {
-            let holder = StatusBarController.widthHolder(of: item)
-            widthHolders[ObjectIdentifier(item)] = holder
-            Log.note("Item \(index) width holder: \(holder.map { "found (\($0.constant)pt)" } ?? "MISSING")")
-        }
-        Log.note("Launched \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") on macOS \(ProcessInfo.processInfo.operatingSystemVersionString), screens \(NSScreen.screens.map { Int($0.frame.width) }), \(rest.count) spacers")
+        readWidthHolders()
+        Log.note("Launched \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") on macOS \(ProcessInfo.processInfo.operatingSystemVersionString), screens \(NSScreen.screens.map { Int($0.frame.width) }), \(spacers.count) spacers, seat \(Int(preferences.seat)) at seating \(preferences.seating)")
         configureRoles()
         observePreferences()
 
@@ -106,6 +108,160 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // The buttons need a layout pass before their positions can be trusted.
         collapseWhenReady(attempt: 0)
+    }
+
+    // MARK: - Seating
+
+    /// Makes one item per name, mark first. The mark sizes itself to its picture; the
+    /// spacers start at nothing and are widened only while hiding.
+    private static func makeItems(named names: [String]) -> [NSStatusItem] {
+        names.enumerated().map { index, name in
+            let item = NSStatusBar.system.statusItem(
+                withLength: index == 0 ? NSStatusItem.variableLength : 0)
+            item.autosaveName = name
+            return item
+        }
+    }
+
+    private func readWidthHolders() {
+        widthHolders.removeAll()
+        for (index, item) in items.enumerated() {
+            let holder = StatusBarController.widthHolder(of: item)
+            widthHolders[ObjectIdentifier(item)] = holder
+            Log.note("Item \(index) width holder: \(holder.map { "found (\($0.constant)pt)" } ?? "MISSING")")
+        }
+    }
+
+    /// True when the five sit as one unbroken run with the mark on the right. That is the
+    /// whole basis of hiding: a widened item only pushes what is on its left, so anything
+    /// wedged between the last spacer and the mark can never be moved off the bar.
+    private var blockIsWhole: Bool {
+        var frames: [CGRect] = []
+        for item in items {
+            guard let frame = item.button?.window?.frame, frame.origin.x > 0 else { return false }
+            frames.append(frame)
+        }
+        let sorted = frames.sorted { $0.origin.x > $1.origin.x }
+        guard let markFrame = mark.button?.window?.frame, markFrame.origin.x == sorted[0].origin.x
+        else { return false }
+        for (right, left) in zip(sorted, sorted.dropFirst()) where right.origin.x - left.maxX > 2 {
+            return false
+        }
+        return true
+    }
+
+    /// Where the mark sits now. The number a re-seating tries to land back on.
+    private var markX: CGFloat? {
+        guard let x = mark.button?.window?.frame.origin.x, x > 0 else { return nil }
+        return x
+    }
+
+    /// Called whenever the bar may have moved under us. A whole block needs nothing.
+    private func reseatIfBroken() {
+        guard !isCollapsed, !reseating, !blockIsWhole else { return }
+        guard let target = markX else {
+            // Nothing of Duck's is on the bar at all. Start again from a seat known to draw,
+            // rather than aiming at a mark that is not there.
+            preferences.seat = Seating.fallback
+            Log.note("Nothing on the bar. Seating again from \(Int(Seating.fallback)).")
+            reseat(target: nil)
+            return
+        }
+        Log.note("Block broken, seating again onto x=\(Int(target)): \(layoutDescription())")
+        reseat(target: target)
+    }
+
+    /// Seats being tried, in order, until the five come back as one run.
+    private var seatQueue: [Double] = []
+    /// The last seat that did come back whole, to fall back on if a correction spoils it.
+    private var wholeSeat: Double?
+    private var seatTarget: CGFloat?
+    private var seatCorrections = 0
+
+    /// Puts the block back together, aiming to leave the mark where it already is.
+    ///
+    /// Two things can go wrong and they pull opposite ways. The seat may be crowded, another
+    /// app holding a slot inside Duck's range, and the answer is to step sideways. Or the
+    /// block may come back whole but in the wrong place, and the answer is to move the seat
+    /// towards where the mark was. Whole wins: a run in the wrong place still hides, a run
+    /// in pieces does not.
+    private func reseat(target: CGFloat?) {
+        guard !reseating else { return }
+        reseating = true
+        seatTarget = target
+        seatCorrections = 0
+        wholeSeat = nil
+        let base = preferences.seat
+        seatQueue = [base, base + 8, base - 8, base + 16, base - 16, Seating.fallback, Seating.fallback + 40]
+        takeNextSeat()
+    }
+
+    private func takeNextSeat() {
+        guard !seatQueue.isEmpty else {
+            reseating = false
+            Log.note("Gave up seating. The bar has no clear run of five: \(layoutDescription())")
+            measureStranded(mark: mark, spacers: spacers)
+            return
+        }
+        settle(at: seatQueue.removeFirst())
+    }
+
+    /// Takes the next seating number, asks macOS for consecutive slots and makes the items
+    /// again. Smaller seat sits further right.
+    private func settle(at seat: Double) {
+        reseatWork?.cancel()
+        preferences.seat = min(max(seat, Seating.range.lowerBound), Seating.range.upperBound)
+
+        for item in items { NSStatusBar.system.removeStatusItem(item) }
+        preferences.seating += 1
+        let names = Seating.names(spacers: spacers.count, seating: preferences.seating)
+        Seating.claim(names, from: preferences.seat)
+        seatedNames = names
+        items = StatusBarController.makeItems(named: names)
+        mark = items[0]
+        spacers = Array(items.dropFirst())
+        readWidthHolders()
+        configureRoles()
+
+        let work = DispatchWorkItem { [weak self] in self?.judge() }
+        reseatWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: work)
+    }
+
+    /// Reads back what that seat actually did, and decides whether to try another.
+    private func judge() {
+        guard let landed = markX, blockIsWhole else {
+            if let good = wholeSeat {
+                // A correction broke a run that was already whole. Put the good one back.
+                Log.note("Correction spoiled the run. Back to seat \(Int(good)).")
+                seatQueue = []
+                wholeSeat = nil
+                seatCorrections = 99
+                settle(at: good)
+                return
+            }
+            Log.note("Seat \(Int(preferences.seat)) did not come back whole: \(layoutDescription())")
+            takeNextSeat()
+            return
+        }
+
+        if let target = seatTarget, abs(landed - target) > 16, seatCorrections < 2 {
+            wholeSeat = preferences.seat
+            seatCorrections += 1
+            let corrected = preferences.seat - Double(target - landed)
+            Log.note("Seat \(Int(preferences.seat)) landed the mark at x=\(Int(landed)), wanted \(Int(target)). Trying \(Int(corrected)).")
+            settle(at: corrected)
+            return
+        }
+
+        reseating = false
+        seatQueue = []
+        Seating.forget(keeping: seatedNames)
+        strandedWidth = 0
+        applyMarkTooltip()
+        Log.note("Seated \(preferences.seating) at \(Int(preferences.seat)), mark at x=\(Int(landed)), block whole: \(layoutDescription())")
+        applyLayout()
+        scheduleAutoHideIfNeeded()
     }
 
     // MARK: - Geometry
@@ -392,6 +548,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let work = DispatchWorkItem { [weak self] in
             guard let self, !self.isCollapsed else { return }
             self.assignRoles()
+            self.reseatIfBroken()
         }
         rolesRefresh = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
@@ -447,8 +604,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     func collapse() {
         guard !isCollapsed else { return }
+        guard !reseating else { return }
         guard assignRoles() else {
             Log.note("Not hiding yet: the menu bar has not settled. \(layoutDescription())")
+            return
+        }
+        guard blockIsWhole else {
+            Log.note("Not hiding yet: the items are in pieces, seating them again first.")
+            reseatIfBroken()
             return
         }
         Log.note("Hiding: \(layoutDescription())")
@@ -472,7 +635,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func collapseWhenReady(attempt: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self, !self.isCollapsed else { return }
-            if self.assignRoles() {
+            if self.reseating {
+                self.collapseWhenReady(attempt: attempt)
+            } else if self.assignRoles(), self.blockIsWhole {
                 // A fresh install stays open until the user hides on purpose.
                 if self.preferences.hasHiddenBefore {
                     self.collapse()
@@ -480,6 +645,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                     Log.note("First launch: staying open. \(self.layoutDescription())")
                 }
             } else if attempt < 6 {
+                self.reseatIfBroken()
                 self.collapseWhenReady(attempt: attempt + 1)
             } else {
                 Log.note("Did not hide: the menu bar never settled. \(self.layoutDescription())")

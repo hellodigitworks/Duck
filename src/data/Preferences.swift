@@ -30,6 +30,8 @@ public final class Preferences: ObservableObject {
         public static let hidingBarWidth = "hidingBarWidth"
         public static let markStyle = "markStyle"
         public static let showInDock = "showInDock"
+        public static let seat = "seat"
+        public static let seating = "seating"
     }
 
     /// The delays offered for hiding icons again, in seconds.
@@ -73,6 +75,18 @@ public final class Preferences: ObservableObject {
         didSet { defaults.set(showInDock, forKey: Key.showInDock) }
     }
 
+    /// The slot Duck asks macOS for. Smaller sits further right. Duck keeps it in step with
+    /// wherever the mark was last dragged, so the five items travel together.
+    @Published public var seat: Double {
+        didSet { defaults.set(seat, forKey: Key.seat) }
+    }
+
+    /// How many times Duck has seated its items. Part of every item's name, because macOS
+    /// only honours a position for a name it has never seen.
+    public var seating: Int {
+        didSet { defaults.set(seating, forKey: Key.seating) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -81,6 +95,7 @@ public final class Preferences: ObservableObject {
             Key.hasHiddenBefore: false,
             Key.markStyle: MarkStyle.plus.rawValue,
             Key.showInDock: false,
+            Key.seat: 120.0,
         ])
 
         autoHide = defaults.bool(forKey: Key.autoHide)
@@ -93,5 +108,7 @@ public final class Preferences: ObservableObject {
         hidingBarWidth = defaults.double(forKey: Key.hidingBarWidth)
         markStyle = MarkStyle(rawValue: defaults.string(forKey: Key.markStyle) ?? "") ?? .plus
         showInDock = defaults.bool(forKey: Key.showInDock)
+        seat = defaults.double(forKey: Key.seat)
+        seating = defaults.integer(forKey: Key.seating)
     }
 }
