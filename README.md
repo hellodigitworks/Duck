@@ -81,7 +81,9 @@ untested.
 
 Duck's mark appears in the menu bar, and the first time its window comes with it.
 
-- Hold ⌘ and drag any icon to the left of the mark. It now hides with the rest.
+- While the icons are showing, a thin line stands at the far left of them. Everything
+  between that line and the mark is what hides. Hide the icons and the line goes with them.
+- Hold ⌘ and drag any icon into that stretch. It now hides with the rest.
 - Click the mark to hide or show them. `+` means hidden, `✕` means showing.
 - The very first time nothing hides until you click ✕. After that Duck starts hidden.
 - They hide again on their own after 10 seconds. Change or switch that off in Preferences.
@@ -158,3 +160,22 @@ npx wrangler pages deploy . --project-name tuck --branch main
 | `tests/` | Checks for the settings and update logic |
 | `docs/images/` | The pictures in this README, the social card and the lab shot. Generated |
 | `build/` | The finished app and the release zip (generated, not committed) |
+
+## Releases
+
+The version lives in one place — the `VERSION` file at the project root. Everything else reads it from there,
+so it is never typed twice.
+
+| Change | Bump | Example |
+|---|---|---|
+| A fix | patch | 1.0.0 → 1.0.1 |
+| A new feature | minor | 1.0.0 → 1.1.0 |
+| A breaking change, or a full redesign | major | 1.0.0 → 2.0.0 |
+
+Bump on finished work, never on every edit. Every bump gets an entry in
+`CHANGELOG.md`, newest at the top.
+
+`scripts/make-app.sh` reads it into the app's Info.plist, and `scripts/make-cask.py`
+reads it back out of the built app for Homebrew. `CHANGELOG.md` is copied into the
+bundle, so the What's new panel in the window reads the same file the release was
+cut from.

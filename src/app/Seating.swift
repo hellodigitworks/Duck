@@ -33,6 +33,16 @@ enum Seating {
         [name("mark", seating: seating)] + (0..<spacers).map { name("spacer\($0)", seating: seating) }
     }
 
+    /// Where the line stands: as far left as macOS will place a third-party item, so every
+    /// icon that hides is on the near side of it. Measured on macOS 27, anything past about
+    /// 340 lands on the same leftmost slot.
+    static let edgePosition: Double = 400
+
+    /// Asks macOS for one slot, for an item that sits away from the block.
+    static func claimOne(_ name: String, at position: Double) {
+        UserDefaults.standard.set(position, forKey: prefix + name)
+    }
+
     /// Asks macOS for consecutive slots, mark first. Has to be written before the items are
     /// made: this is read once, as an item appears, and never again.
     static func claim(_ names: [String], from position: Double) {

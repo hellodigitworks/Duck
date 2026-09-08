@@ -19,47 +19,26 @@ enum Mark {
     private static let arm: CGFloat = 6.6
     private static let stroke: CGFloat = 1.7
     private static let steps = 25
-    /// Room on the mark's left for the edge rule, and how tall that rule stands.
-    private static let edge: CGFloat = 6
-    private static let rule: CGFloat = 12
-
-    /// One look is a style and whether the edge rule is on it. The picker in Preferences
-    /// shows the shape by itself; the menu bar shows the shape with its edge.
-    private struct Look: Hashable {
-        let style: MarkStyle
-        let edged: Bool
-    }
 
     /// Frames from hidden (0) to showing (1), one set per look, drawn the first time asked.
-    private static var frames: [Look: [NSImage]] = [:]
+    private static var frames: [MarkStyle: [NSImage]] = [:]
 
-    static func image(style: MarkStyle, fraction: CGFloat, edged: Bool = true) -> NSImage {
-        let set = frames(for: Look(style: style, edged: edged))
+    static func image(style: MarkStyle, fraction: CGFloat) -> NSImage {
+        let set = frames(for: style)
         let clamped = min(max(fraction, 0), 1)
         return set[Int((clamped * CGFloat(set.count - 1)).rounded())]
     }
 
-    private static func frames(for look: Look) -> [NSImage] {
-        if let set = frames[look] { return set }
-        let set = (0..<steps).map { draw(look: look, fraction: CGFloat($0) / CGFloat(steps - 1)) }
-        frames[look] = set
+    private static func frames(for style: MarkStyle) -> [NSImage] {
+        if let set = frames[style] { return set }
+        let set = (0..<steps).map { draw(style: style, fraction: CGFloat($0) / CGFloat(steps - 1)) }
+        frames[style] = set
         return set
     }
 
-    private static func draw(look: Look, fraction: CGFloat) -> NSImage {
-        let style = look.style
-        let width = look.edged ? box + edge : box
-        let image = NSImage(size: NSSize(width: width, height: box), flipped: false) { rect in
-            // A hairline on the left, and the whole rule of the app in one picture: what is
-            // on the far side of it hides, what is on this side stays. It rides on the mark
-            // rather than sitting in its own menu bar item, so the two can never drift apart.
-            if look.edged {
-                NSColor.black.withAlphaComponent(0.3).set()
-                NSBezierPath(rect: NSRect(
-                    x: rect.minX + 1, y: rect.midY - rule / 2, width: 1, height: rule)).fill()
-            }
-
-            let center = CGPoint(x: rect.maxX - box / 2, y: rect.midY)
+    private static func draw(style: MarkStyle, fraction: CGFloat) -> NSImage {
+        let image = NSImage(size: NSSize(width: box, height: box), flipped: false) { rect in
+            let center = CGPoint(x: rect.midX, y: rect.midY)
             NSColor.black.set()
             switch style {
             case .plus: plus(at: center, fraction: fraction)
@@ -74,6 +53,22 @@ enum Mark {
         image.isTemplate = true
         return image
     }
+
+    /// The line that stands at the far left while the icons are showing. Everything between
+    /// it and the mark is what hides. Its own menu bar item, so it can sit out past the
+    /// icons where the mark cannot.
+    static let rule: NSImage = {
+        let width: CGFloat = 5
+        let height: CGFloat = 13
+        let image = NSImage(size: NSSize(width: width, height: box), flipped: false) { rect in
+            NSColor.black.withAlphaComponent(0.45).set()
+            NSBezierPath(rect: NSRect(
+                x: rect.midX - 0.5, y: rect.midY - height / 2, width: 1, height: height)).fill()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }()
 
     private static func path() -> NSBezierPath {
         let path = NSBezierPath()

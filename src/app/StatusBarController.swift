@@ -48,6 +48,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var mark: NSStatusItem
     /// The invisible ones that do the pushing.
     private var spacers: [NSStatusItem]
+    /// The line at the far left. Everything between it and the mark is what hides, so it
+    /// only stands there while the icons are showing: once they are gone it has nothing to
+    /// bound, and the bar is left with the mark alone.
+    private var edge: NSStatusItem
 
     /// Small enough that macOS gives the room away rather than shuffling icons sideways.
     private static let rampStep: CGFloat = 100
@@ -86,12 +90,15 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let names = Seating.names(
             spacers: StatusBarController.spacerCount(for: NSScreen.screens),
             seating: preferences.seating)
+        let edgeName = Seating.name("edge", seating: preferences.seating)
         Seating.claim(names, from: preferences.seat)
-        seatedNames = names
+        Seating.claimOne(edgeName, at: Seating.edgePosition)
+        seatedNames = names + [edgeName]
         let made = StatusBarController.makeItems(named: names)
         items = made
         mark = made[0]
         spacers = Array(made.dropFirst())
+        edge = StatusBarController.makeEdge(named: edgeName)
         super.init()
 
         readWidthHolders()
@@ -121,6 +128,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             item.autosaveName = name
             return item
         }
+    }
+
+    /// The line stands in its own item out past the icons, where the mark cannot reach.
+    private static func makeEdge(named name: String) -> NSStatusItem {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.autosaveName = name
+        item.button?.image = Mark.rule
+        return item
     }
 
     private func readWidthHolders() {
@@ -213,13 +228,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         preferences.seat = min(max(seat, Seating.range.lowerBound), Seating.range.upperBound)
 
         for item in items { NSStatusBar.system.removeStatusItem(item) }
+        NSStatusBar.system.removeStatusItem(edge)
         preferences.seating += 1
         let names = Seating.names(spacers: spacers.count, seating: preferences.seating)
+        let edgeName = Seating.name("edge", seating: preferences.seating)
         Seating.claim(names, from: preferences.seat)
-        seatedNames = names
+        Seating.claimOne(edgeName, at: Seating.edgePosition)
+        seatedNames = names + [edgeName]
         items = StatusBarController.makeItems(named: names)
         mark = items[0]
         spacers = Array(items.dropFirst())
+        edge = StatusBarController.makeEdge(named: edgeName)
         readWidthHolders()
         configureRoles()
 
@@ -399,6 +418,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             button.action = #selector(markClicked)
             _ = button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+        if let button = edge.button {
+            button.image = Mark.rule
+            button.target = self
+            button.action = #selector(markClicked)
+            _ = button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            button.toolTip = "Everything between here and Duck hides. Hold ⌘ and drag icons in."
+        }
         applyMarkTooltip()
         applyLayout()
     }
@@ -406,6 +432,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Sets every item's width and the mark's picture from the current state.
     private func applyLayout() {
         widen(mark, to: NSStatusItem.variableLength)
+        edge.isVisible = !isCollapsed
         setMark(to: isCollapsed ? 0 : 1)
 
         rampToken += 1
@@ -705,13 +732,16 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     /// Every item in one line: role, length, where its window is. What a bug report needs.
     private func layoutDescription() -> String {
-        items.enumerated().map { index, item in
+        let described = items.enumerated().map { index, item in
             let role = item === mark ? "mark" : "spacer"
             let frame = item.button?.window?.frame ?? .zero
             let holder = widthHolders[ObjectIdentifier(item)]
             let held = holder.map { $0.isActive ? "held" : "free" } ?? "noholder"
             return "\(index):\(role) len=\(Int(item.length)) x=\(Int(frame.origin.x)) w=\(Int(frame.width)) \(held)\(item.isVisible ? "" : " invisible")"
-        }.joined(separator: " | ")
+        }
+        let edgeFrame = edge.button?.window?.frame ?? .zero
+        return (described + ["line x=\(Int(edgeFrame.origin.x)) w=\(Int(edgeFrame.width))\(edge.isVisible ? "" : " invisible")"])
+            .joined(separator: " | ")
     }
 
     /// Every window sitting at menu bar height, by owner, left to right: what is actually on
