@@ -11,7 +11,7 @@ BUNDLE_ID="com.hdw.duck"
 # make-cask.py reads the built app, and the app itself reads the number back out
 # of its own Info.plist, so this is the only line that ever needs changing.
 VERSION="$(tr -d ' \n' < VERSION)"
-BUILD_NUMBER="11"
+BUILD_NUMBER="1"
 
 # Build outside the Google Drive folder: Drive sync corrupts incremental
 # build state (files appear where directories should be).

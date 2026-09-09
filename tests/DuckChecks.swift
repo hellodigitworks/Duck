@@ -101,8 +101,13 @@ do {
     let text = (try? String(contentsOf: root.appendingPathComponent("CHANGELOG.md"), encoding: .utf8)) ?? ""
     check(!text.isEmpty, "CHANGELOG.md is where the checks expect it")
 
+    // However many releases the file holds, up to three. One at launch, more later.
+    let headings = text.components(separatedBy: .newlines)
+        .filter { $0.hasPrefix("## [") && !$0.lowercased().contains("unreleased") }
+        .count
+    let expected = min(3, headings)
     let releases = ReleaseNotes.parse(markdown: text, limit: 3)
-    check(releases.count == 3, "three releases are read, got \(releases.count)")
+    check(releases.count == expected, "\(expected) releases are read, got \(releases.count)")
 
     let version = (try? String(contentsOf: root.appendingPathComponent("VERSION"), encoding: .utf8))?
         .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
