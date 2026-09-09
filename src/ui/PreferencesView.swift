@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import DuckCore
 
@@ -13,6 +14,15 @@ enum Ink {
     static let accent = Color(red: 1, green: 0.18, blue: 0)
     static let shadow = Color(red: 0.25, green: 0.18, blue: 0.08).opacity(0.07)
     static let spring = Animation.spring(response: 0.32, dampingFraction: 0.72)
+    /// A panel arriving, and the same panel leaving. Exits are shorter and softer.
+    static let enter = Animation.easeOut(duration: 0.32)
+    static let leave = Animation.easeIn(duration: 0.14)
+
+    /// The same curve, or none at all when the Mac is set to reduce motion. Honoured
+    /// rather than overridden: the panel still arrives, it just arrives at once.
+    static func motion(_ animation: Animation) -> Animation? {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? nil : animation
+    }
 }
 
 /// The two faces. Both ship inside the app; if one is missing the system font steps in.
@@ -26,12 +36,26 @@ struct PreferencesView: View {
     @ObservedObject var preferences: Preferences
     @ObservedObject var login: LoginItemModel
     @ObservedObject var updates: UpdateCheck
+    @ObservedObject var notes: ReleaseNotes
 
     private var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
     }
 
     var body: some View {
+        ZStack {
+            settings
+            if notes.showing {
+                ReleaseNotesPanel(notes: notes, close: closeNotes)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .frame(minWidth: 360, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity, alignment: .top)
+        .background(Ink.paper)
+        .onAppear { login.refresh() }
+    }
+
+    private var settings: some View {
         VStack(spacing: 0) {
             // The rows. Each one a hairline apart, the way a ledger is set.
             VStack(spacing: 0) {
@@ -87,10 +111,7 @@ struct PreferencesView: View {
                     .foregroundStyle(Ink.text)
                     .underline(true, color: Ink.edge)
                     .focusable(false)
-                Text(version)
-                    .font(Type.sans(12))
-                    .foregroundStyle(Ink.muted)
-                    .monospacedDigit()
+                VersionButton(version: version, action: openNotes)
                 if let newer = updates.newer {
                     Link("\(newer.version) is out", destination: newer.url)
                         .font(Type.medium(12))
@@ -111,9 +132,18 @@ struct PreferencesView: View {
         .font(Type.sans(13))
         .foregroundStyle(Ink.text)
         .tint(Ink.text)
-        .frame(minWidth: 360, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity, alignment: .top)
-        .background(Ink.paper)
-        .onAppear { login.refresh() }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Opening also marks this version as seen, so the panel opens itself once per update
+    /// and never again.
+    private func openNotes() {
+        preferences.lastSeenVersion = version
+        withAnimation(Ink.motion(Ink.enter)) { notes.showing = true }
+    }
+
+    private func closeNotes() {
+        withAnimation(Ink.motion(Ink.leave)) { notes.showing = false }
     }
 
     /// The duck, from the bundle. Drawn by the same file the icon comes from.
@@ -266,6 +296,33 @@ struct Chip: View {
         .onHover { hover.on = $0 }
         .animation(Ink.spring, value: selected)
         .animation(Ink.spring, value: hovering)
+    }
+}
+
+/// The version in the foot, and the way to what changed in it. It reads as a label until
+/// the mouse is over it, so the foot stays quiet.
+struct VersionButton: View {
+    let version: String
+    let action: () -> Void
+    @StateObject private var hover = Flag()
+
+    var body: some View {
+        Button(action: action) {
+            Text(version)
+                .font(Type.sans(12))
+                .monospacedDigit()
+                .foregroundStyle(hover.on ? Ink.text : Ink.muted)
+                .underline(hover.on, color: Ink.edge)
+                // A label this small still has to be as easy to hit as anything else.
+                .padding(.horizontal, 6)
+                .frame(minHeight: 40)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(Press())
+        .focusable(false)
+        .help("What's new in \(version)")
+        .onHover { hover.on = $0 }
+        .animation(Ink.spring, value: hover.on)
     }
 }
 

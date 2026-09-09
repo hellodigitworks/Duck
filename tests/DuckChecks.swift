@@ -90,6 +90,50 @@ do {
     check(UpdateCheck.parse(Data(#"{"message":"rate limited"}"#.utf8)) == nil, "an error answer is ignored")
 }
 
+// MARK: Release notes
+//
+// The What's new panel reads the CHANGELOG.md that make-app.sh copies into the
+// bundle. This feeds it the real file from the repo, so a heading that stops
+// parsing is caught here rather than by an empty panel.
+
+do {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+    let text = (try? String(contentsOf: root.appendingPathComponent("CHANGELOG.md"), encoding: .utf8)) ?? ""
+    check(!text.isEmpty, "CHANGELOG.md is where the checks expect it")
+
+    let releases = ReleaseNotes.parse(markdown: text, limit: 3)
+    check(releases.count == 3, "three releases are read, got \(releases.count)")
+
+    let version = (try? String(contentsOf: root.appendingPathComponent("VERSION"), encoding: .utf8))?
+        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    check(releases.first?.version == version,
+          "the newest release matches VERSION (\(releases.first?.version ?? "none") vs \(version))")
+    check(releases.first?.date.isEmpty == false, "the newest release carries a date")
+    check(releases.first?.sections.isEmpty == false, "the newest release carries at least one section")
+    check(releases.allSatisfy { $0.sections.allSatisfy { !$0.items.isEmpty } },
+          "no section is listed with nothing under it")
+    // "## [Unreleased]" is a heading with no version and must never show as a release.
+    check(!releases.contains { $0.version.lowercased().contains("unreleased") },
+          "an Unreleased heading is not read as a release")
+}
+
+// MARK: When the notes show themselves
+//
+// Once per version, on an install that has been used. A fresh install is left alone.
+
+do {
+    func show(_ current: String, _ lastSeen: String, _ used: Bool) -> Bool {
+        Preferences.shouldShowNotes(current: current, lastSeen: lastSeen, hasUsedDuckBefore: used)
+    }
+
+    check(show("1.5.0", "", false) == false, "a fresh install is not shown what changed")
+    check(show("1.5.0", "", true), "an install that has been used is shown the first new version")
+    check(show("1.5.0", "1.5.0", true) == false, "the same version is shown once, not every launch")
+    check(show("1.5.1", "1.5.0", true), "the next version is shown again")
+    check(show("1.4.2", "1.5.0", true), "a version that moved at all counts, even backwards")
+    check(show("", "1.5.0", true) == false, "a build with no version number shows nothing")
+}
+
 if failed == 0 {
     print("All \(passed) checks passed")
     exit(0)

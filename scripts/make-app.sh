@@ -7,8 +7,11 @@ cd "$(dirname "$0")/.."
 
 APP_NAME="Duck"
 BUNDLE_ID="com.hdw.duck"
-VERSION="1.4.2"
-BUILD_NUMBER="10"
+# One version, one place. The VERSION file at the project root is the source;
+# make-cask.py reads the built app, and the app itself reads the number back out
+# of its own Info.plist, so this is the only line that ever needs changing.
+VERSION="$(tr -d ' \n' < VERSION)"
+BUILD_NUMBER="11"
 
 # Build outside the Google Drive folder: Drive sync corrupts incremental
 # build state (files appear where directories should be).
@@ -29,6 +32,9 @@ cp icons/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # The duck itself, for the foot of the window, and the dark Dock tile.
 cp icons/duck.svg "$APP/Contents/Resources/duck.svg"
 cp icons/AppIcon-dark.png "$APP/Contents/Resources/AppIcon-dark.png"
+
+# What changed, so the window can show it without a network call.
+cp CHANGELOG.md "$APP/Contents/Resources/CHANGELOG.md"
 
 # The two faces the window uses, Exposure and Inter. macOS registers everything in Resources/Fonts on its own
 # (ATSApplicationFontsPath below), so there is no font code in the app at all.
