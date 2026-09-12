@@ -10,6 +10,10 @@
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
 
+# The feed decides when Duck updates itself, so it must never be served stale either.
+/appcast.xml
+  Cache-Control: public, max-age=0, must-revalidate
+
 # Fonts never change under the same name.
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable

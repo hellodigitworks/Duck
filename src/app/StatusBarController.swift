@@ -35,7 +35,7 @@ import DuckCore
 /// rather than hiding some and calling it done.
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let preferences: Preferences
-    private let updates: UpdateCheck
+    private let checkForUpdates: () -> Void
 
     /// Every item Duck owns, in creation order. Position decides which is the mark.
     private var items: [NSStatusItem]
@@ -79,9 +79,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         case showHide = 1, autoHide, update, stranded, strandedRule
     }
 
-    init(preferences: Preferences, updates: UpdateCheck) {
+    init(preferences: Preferences, checkForUpdates: @escaping () -> Void) {
         self.preferences = preferences
-        self.updates = updates
+        self.checkForUpdates = checkForUpdates
 
         // Seated fresh on every launch, so the five always come back as one unbroken run
         // with the mark on its right end. Names carry the seating number because macOS only
@@ -853,11 +853,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         report.target = self
         menu.addItem(report)
 
-        // Only there once a newer release exists.
-        let update = NSMenuItem(title: "", action: #selector(menuOpenUpdate), keyEquivalent: "")
+        let update = NSMenuItem(title: "Check for Updates…", action: #selector(menuCheckForUpdates), keyEquivalent: "")
         update.target = self
         update.tag = MenuTag.update.rawValue
-        update.isHidden = true
         menu.addItem(update)
 
         menu.addItem(.separator())
@@ -876,10 +874,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         menu.item(withTag: MenuTag.strandedRule.rawValue)?.isHidden = count == 0
         menu.item(withTag: MenuTag.showHide.rawValue)?.title = isCollapsed ? "Show hidden icons" : "Hide icons"
         menu.item(withTag: MenuTag.autoHide.rawValue)?.state = preferences.autoHide ? .on : .off
-        if let item = menu.item(withTag: MenuTag.update.rawValue) {
-            item.isHidden = updates.newer == nil
-            item.title = updates.newer.map { "Download Duck \($0.version)…" } ?? ""
-        }
     }
 
     func menuDidClose(_ menu: NSMenu) {
@@ -892,7 +886,5 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func menuToggle() { toggle() }
     @objc private func menuToggleAutoHide() { preferences.autoHide.toggle() }
     @objc private func menuOpenPreferences() { openPreferences?() }
-    @objc private func menuOpenUpdate() {
-        if let url = updates.newer?.url { NSWorkspace.shared.open(url) }
-    }
+    @objc private func menuCheckForUpdates() { checkForUpdates() }
 }

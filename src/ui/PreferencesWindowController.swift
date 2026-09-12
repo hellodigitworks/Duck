@@ -24,7 +24,7 @@ final class PreferencesWindowController: NSWindowController {
         window.contentMinSize = NSSize(width: 360, height: 400)
         window.contentViewController = NSHostingController(
             rootView: PreferencesView(preferences: .shared, login: LoginItemModel(),
-                                      updates: .shared, notes: .shared))
+                                      notes: .shared))
         window.setContentSize(NSSize(width: 380, height: 440))
         window.setFrameAutosaveName("DuckPreferences2") // a new name, so the old, taller frame is not restored
         super.init(window: window)

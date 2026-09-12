@@ -4,6 +4,10 @@ Every release of Duck, newest first.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-12
+### Added
+- Duck updates itself. It looks for a newer release once a day, says so only when there is one, and downloads, checks and installs it once you agree. Choose Check for Updates from its menu to look right away.
+
 ## [1.0.1] - 2026-09-12
 ### Fixed
 - Duck now honours the chosen auto-hide delay after login. It no longer hides Wi-Fi, battery, and other menu bar controls immediately while macOS is still starting them.

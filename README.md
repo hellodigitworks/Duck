@@ -96,9 +96,12 @@ macOS can always find it.
 **Show in Dock.** Off by default: Duck lives in the menu bar and nowhere else. Tick it and
 Duck also gets an icon in the Dock and a place in ⌘-Tab, the moment you tick it.
 
-**Updates.** Duck asks GitHub once every few hours whether a newer release exists. If one
-does, the window and the right-click menu say so with a link. It never downloads anything
-on its own.
+**Updates.** Duck looks for a newer release once a day, and says so only when there is one.
+Choose Check for Updates from its menu to look right away. Say yes and it downloads the
+release, checks the signature, installs it and starts Duck again. Every release is signed
+with a key held on one Mac, so a file swapped anywhere along the way is refused. The
+downloading and installing is [Sparkle](https://sparkle-project.org), the library most Mac
+apps outside the App Store use for this.
 
 **If something goes wrong.** Right-click the mark, hold ⌥, and choose Copy Diagnostics: the Mac,
 the screens, every item's position and the recent log land on the clipboard, ready to
@@ -116,8 +119,11 @@ paste into an issue. The log itself is at `~/Library/Logs/Duck.log`.
 zsh scripts/make-app.sh
 ```
 
-Add `--install` to copy the finished app into `/Applications`, or `--release` to also write
-`build/Duck.zip`, the file to attach to a GitHub release. Tests:
+The app is assembled outside the project folder and the script prints where it landed.
+Google Drive tags everything it syncs, and one tagged file anywhere inside a bundle makes
+its signature fail to verify, which is enough to stop an update installing. Add `--install`
+to copy the finished app into `/Applications`, or `--release` to also write `build/Duck.zip`,
+the file to attach to a GitHub release. Tests:
 
 ```bash
 zsh scripts/test.sh
@@ -150,16 +156,16 @@ npx wrangler pages deploy . --project-name tuck --branch main
 
 | Folder | What |
 |---|---|
-| `src/data/` | Settings, start at login, the update check, the log. No screen code |
+| `src/data/` | Settings, start at login, the log. No screen code |
 | `src/app/` | App start-up and the menu bar items |
 | `src/ui/` | The mark artwork and the preferences window |
 | `scripts/` | Build script, test script, icon generator and image generator |
 | `icons/` | The duck in `duck.svg`, and the app icon made from it |
 | `fonts/` | Exposure and Inter, the two faces the app ships. Inter is generated, Exposure is licensed |
-| `site/` | The landing page and the install script, deployed as they are |
-| `tests/` | Checks for the settings and update logic |
+| `site/` | The landing page, the install script and the update feed, deployed as they are |
+| `tests/` | Checks for the settings, the mark and the release notes |
 | `docs/images/` | The pictures in this README, the social card and the lab shot. Generated |
-| `build/` | The finished app and the release zip (generated, not committed) |
+| `build/` | The release zip (generated, not committed). The app itself is built outside the project |
 
 ## Releases
 
@@ -179,3 +185,18 @@ Bump on finished work, never on every edit. Every bump gets an entry in
 reads it back out of the built app for Homebrew. `CHANGELOG.md` is copied into the
 bundle, so the What's new panel in the window reads the same file the release was
 cut from.
+
+Cutting one, in order:
+
+1. Bump `VERSION` and write the entry in `CHANGELOG.md`.
+2. `zsh scripts/make-app.sh --release` builds the app and writes `build/Duck.zip`.
+3. Attach that zip to a GitHub release tagged `v<version>`.
+4. `zsh scripts/make-appcast.sh` signs the zip and writes `site/appcast.xml`, the feed
+   Duck reads. The notes in it come straight out of `CHANGELOG.md`.
+5. Deploy `site/`. Until that lands, nobody is offered the release.
+6. `python3 scripts/make-cask.py` rewrites the Homebrew cask, then commit and push the tap.
+
+The key that signs step 4 is in this Mac's keychain and nowhere else, so a release can only
+be cut here. Its public half sits in `scripts/make-app.sh` and goes into every build, which
+is how a copy of Duck knows the download it just fetched is really ours. Sign the zip after
+it is final: change the app and the signature stops matching.

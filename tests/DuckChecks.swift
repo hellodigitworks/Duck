@@ -85,24 +85,6 @@ do {
     check(Preferences(defaults: defaults).markStyle == .plus, "an unknown look falls back to the plus")
 }
 
-// MARK: Updates
-
-check(UpdateCheck.isNewer("1.2.0", than: "1.1.1"), "1.2.0 is newer than 1.1.1")
-check(UpdateCheck.isNewer("2.0", than: "1.9.9"), "2.0 is newer than 1.9.9")
-check(UpdateCheck.isNewer("1.1.10", than: "1.1.9"), "1.1.10 is newer than 1.1.9, digit by digit")
-check(!UpdateCheck.isNewer("1.2", than: "1.2.0"), "1.2 and 1.2.0 are the same")
-check(!UpdateCheck.isNewer("1.1.0", than: "1.1.1"), "an older version is not newer")
-check(!UpdateCheck.isNewer("1.1.1", than: "1.1.1"), "the same version is not newer")
-
-do {
-    let json = #"{"tag_name":"v1.3.0","html_url":"https://github.com/hellodigitworks/Duck/releases/tag/v1.3.0","draft":false}"#
-    let release = UpdateCheck.parse(Data(json.utf8))
-    check(release?.version == "1.3.0", "the v is dropped from the tag")
-    check(release?.url.host == "github.com", "the release page comes through")
-    check(UpdateCheck.parse(Data("not json".utf8)) == nil, "garbage is ignored")
-    check(UpdateCheck.parse(Data(#"{"message":"rate limited"}"#.utf8)) == nil, "an error answer is ignored")
-}
-
 // MARK: Release notes
 //
 // The What's new panel reads the CHANGELOG.md that make-app.sh copies into the

@@ -35,7 +35,6 @@ enum Type {
 struct PreferencesView: View {
     @ObservedObject var preferences: Preferences
     @ObservedObject var login: LoginItemModel
-    @ObservedObject var updates: UpdateCheck
     @ObservedObject var notes: ReleaseNotes
 
     private var version: String {
@@ -112,13 +111,6 @@ struct PreferencesView: View {
                     .underline(true, color: Ink.edge)
                     .focusable(false)
                 VersionButton(version: version, action: openNotes)
-                if let newer = updates.newer {
-                    Link("\(newer.version) is out", destination: newer.url)
-                        .font(Type.medium(12))
-                        .foregroundStyle(Ink.text)
-                        .underline()
-                        .focusable(false)
-                }
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
                     .buttonStyle(.plain)

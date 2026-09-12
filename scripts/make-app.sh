@@ -11,19 +11,29 @@ BUNDLE_ID="com.hdw.duck"
 # make-cask.py reads the built app, and the app itself reads the number back out
 # of its own Info.plist, so this is the only line that ever needs changing.
 VERSION="$(tr -d ' \n' < VERSION)"
-BUILD_NUMBER="1"
+SPARKLE_FRAMEWORK="$HOME/Library/Caches/duck-build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+PUBLIC_UPDATE_KEY="wLpwGKikogE3sOXZGvFoZzMSYr540Ek4DQgAR3CpvS0="
 
 # Build outside the Google Drive folder: Drive sync corrupts incremental
 # build state (files appear where directories should be).
 SCRATCH="$HOME/Library/Caches/duck-build"
 swift build -c release --scratch-path "$SCRATCH"
 
-APP="build/$APP_NAME.app"
+# The app is assembled out here too. Drive stamps everything it syncs with tags of its
+# own, and one tagged file anywhere inside a bundle makes the signature fail to verify,
+# which is enough to stop an update installing. Only the finished zip comes back into
+# the project folder.
+APP="$SCRATCH/app/$APP_NAME.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$SCRATCH/release/Duck" "$APP/Contents/MacOS/Duck"
 # Symbol names are only useful to a debugger. Dropping them halves the binary.
 strip "$APP/Contents/MacOS/Duck"
+# Swift links Sparkle beside the executable while building. Inside an app it belongs in
+# Contents/Frameworks, so add the app location before signing the executable.
+mkdir -p "$APP/Contents/Frameworks"
+cp -R "$SPARKLE_FRAMEWORK" "$APP/Contents/Frameworks/"
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Duck"
 
 if [ ! -f icons/AppIcon.icns ]; then
   swift scripts/make-icon.swift
@@ -60,8 +70,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
     <string>$VERSION</string>
+    <!-- The same number again, not a build count: Sparkle compares the feed's
+         sparkle:version against this key, so the two have to agree or every
+         copy is offered the release it is already running. -->
     <key>CFBundleVersion</key>
-    <string>$BUILD_NUMBER</string>
+    <string>$VERSION</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSApplicationCategoryType</key>
@@ -76,12 +89,26 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>© 2026 hdw</string>
     <key>ATSApplicationFontsPath</key>
     <string>Fonts</string>
+    <key>SUFeedURL</key>
+    <string>https://duck.hellodigitworks.com/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>$PUBLIC_UPDATE_KEY</string>
+    <!-- Duck looks for a newer release once a day on its own, so nobody is asked for
+         permission to look on first launch. It still asks before it installs. -->
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
 </dict>
 </plist>
 PLIST
 
-# Ad-hoc signature: enough for a locally built app to run and remember its settings.
+# Sparkle verifies each release using the public key above. This ad-hoc signature is for
+# local builds; release builds should use an Apple Developer ID when one is available.
+# The verify is not a formality: a bundle can sign cleanly and still fail to open.
+xattr -cr "$APP"
 codesign --force --deep --sign - "$APP"
+codesign --verify --deep --strict "$APP"
 echo "Built: $APP"
 
 for flag in "$@"; do
@@ -98,8 +125,10 @@ for flag in "$@"; do
     # in the name, so the landing page's link to the latest release never goes stale.
     --release)
       ZIP="build/$APP_NAME.zip"
+      mkdir -p build
       rm -f "$ZIP"
-      ditto -c -k --keepParent "$APP" "$ZIP"
+      # --norsrc --noextattr so nothing Drive or Finder attached rides along inside.
+      ditto -c -k --keepParent --norsrc --noextattr "$APP" "$ZIP"
       echo "Release: $ZIP ($(du -h "$ZIP" | cut -f1))"
       ;;
     *)

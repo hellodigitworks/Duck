@@ -76,6 +76,9 @@ cask "duck" do
   desc "Hides the menu bar icons you are not using right now"
   homepage "https://duck.hellodigitworks.com/"
 
+  # Duck updates itself through Sparkle, so Homebrew should not try to upgrade it.
+  auto_updates true
+
   depends_on macos: :ventura
   depends_on arch: :arm64
 
