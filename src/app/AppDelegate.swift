@@ -1,7 +1,6 @@
 import AppKit
 import Combine
 import DuckCore
-import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     static let toggleNotification = Notification.Name("com.hdw.duck.toggle")
@@ -10,11 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBar: StatusBarController?
     private var cancellables = Set<AnyCancellable>()
     private var appearanceWatch: NSKeyValueObservation?
-    /// Sparkle owns the signed update download and the relaunch after installation. It
-    /// must stay alive for as long as Duck runs.
-    private let updater = SPUStandardUpdaterController(startingUpdater: true,
-                                                       updaterDelegate: nil,
-                                                       userDriverDelegate: nil)
+    /// The updater, alive for as long as Duck is. The window holds the same one.
+    private let updates = Updates.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.build()
@@ -23,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observePreferences()
 
         let statusBar = StatusBarController(preferences: preferences) { [weak self] in
-            self?.checkForUpdates(nil)
+            self?.updates.checkNow()
         }
         statusBar.openPreferences = { [weak self] in self?.showPreferences(nil) }
         self.statusBar = statusBar
@@ -70,11 +66,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PreferencesWindowController.shared.show()
     }
 
-    /// Duck has no Dock icon, so Sparkle's window would open behind whatever is in
-    /// front. Coming forward first puts it where the click was.
     @objc func checkForUpdates(_ sender: Any?) {
-        NSApp.activate(ignoringOtherApps: true)
-        updater.checkForUpdates(sender)
+        updates.checkNow()
     }
 
     @objc private func handleToggleNotification() {

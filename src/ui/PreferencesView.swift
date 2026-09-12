@@ -35,6 +35,7 @@ enum Type {
 struct PreferencesView: View {
     @ObservedObject var preferences: Preferences
     @ObservedObject var login: LoginItemModel
+    @ObservedObject var updates: Updates
     @ObservedObject var notes: ReleaseNotes
 
     private var version: String {
@@ -64,6 +65,9 @@ struct PreferencesView: View {
                 }
                 rule
                 row("Show in Dock") { Toggle(isOn: $preferences.showInDock) { EmptyView() } }
+                rule
+                row("Look for updates daily") { Toggle(isOn: updatesBinding) { EmptyView() } }
+                checkNow
                 rule
                 row("Hide again automatically") { Toggle(isOn: $preferences.autoHide) { EmptyView() } }
                 rule
@@ -166,6 +170,24 @@ struct PreferencesView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 12)
+    }
+
+    /// Under the daily switch: the same look, right now, whether the switch is on or off.
+    private var checkNow: some View {
+        Button("Check now") { updates.checkNow() }
+            .buttonStyle(.plain)
+            .font(Type.sans(12))
+            .foregroundStyle(Ink.muted)
+            .underline(true, color: Ink.edge)
+            .focusable(false)
+            .padding(.bottom, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var updatesBinding: Binding<Bool> {
+        Binding(
+            get: { updates.looksDaily },
+            set: { wanted in updates.setLooksDaily(wanted) })
     }
 
     private var launchBinding: Binding<Bool> {

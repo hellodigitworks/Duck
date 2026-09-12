@@ -7,9 +7,15 @@ import DuckCore
 final class PreferencesWindowController: NSWindowController {
     static let shared = PreferencesWindowController()
 
+    /// Where the window's size and position are remembered. Written once: the name was
+    /// typed twice before, and the copy in show() went on restoring the frame from before
+    /// the updates row, so the window kept coming back too short for its own contents.
+    /// Bumped whenever a row is added, so nobody is handed a frame that now clips.
+    private static let frameName = "DuckPreferences3"
+
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 440),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 504),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false)
@@ -21,12 +27,12 @@ final class PreferencesWindowController: NSWindowController {
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         // Small: the rows and the foot, nothing else.
-        window.contentMinSize = NSSize(width: 360, height: 400)
+        window.contentMinSize = NSSize(width: 360, height: 472)
         window.contentViewController = NSHostingController(
             rootView: PreferencesView(preferences: .shared, login: LoginItemModel(),
-                                      notes: .shared))
-        window.setContentSize(NSSize(width: 380, height: 440))
-        window.setFrameAutosaveName("DuckPreferences2") // a new name, so the old, taller frame is not restored
+                                      updates: .shared, notes: .shared))
+        window.setContentSize(NSSize(width: 380, height: 504))
+        window.setFrameAutosaveName(Self.frameName)
         super.init(window: window)
     }
 
@@ -37,7 +43,7 @@ final class PreferencesWindowController: NSWindowController {
 
     func show() {
         guard let window else { return }
-        if !window.isVisible, !window.setFrameUsingName("DuckPreferences2") {
+        if !window.isVisible, !window.setFrameUsingName(Self.frameName) {
             window.center()
         }
         NSApp.activate(ignoringOtherApps: true)

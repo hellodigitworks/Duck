@@ -7,6 +7,7 @@ Every release of Duck, newest first.
 ## [1.1.0] - 2026-09-12
 ### Added
 - Duck updates itself. It looks for a newer release once a day, says so only when there is one, and downloads, checks and installs it once you agree. Choose Check for Updates from its menu to look right away.
+- Look for updates daily, in Preferences, with Check now under it. Turn the daily look off and Duck only ever looks when you ask.
 
 ## [1.0.1] - 2026-09-12
 ### Fixed
