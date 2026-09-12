@@ -58,6 +58,19 @@ do {
     check(Preferences(defaults: defaults).autoHideSeconds == 10, "unknown delay falls back to 10 seconds")
 }
 
+// MARK: Auto-hide timing
+
+check(AutoHideSchedule.shouldScheduleAfterLaunch(hasHiddenBefore: true, autoHideEnabled: true),
+      "a used copy honours enabled auto-hide after launch")
+check(!AutoHideSchedule.shouldScheduleAfterLaunch(hasHiddenBefore: true, autoHideEnabled: false),
+      "auto-hide off keeps controls visible after launch")
+check(!AutoHideSchedule.shouldScheduleAfterLaunch(hasHiddenBefore: false, autoHideEnabled: true),
+      "a fresh copy stays open after launch")
+check(AutoHideSchedule.shouldRetry(after: AutoHideSchedule.maximumRetries - 1),
+      "auto-hide retries while inside its 30 second settling window")
+check(!AutoHideSchedule.shouldRetry(after: AutoHideSchedule.maximumRetries),
+      "auto-hide stops retrying after its settling window")
+
 // MARK: The mark
 
 do {

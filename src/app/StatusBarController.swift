@@ -113,8 +113,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             self, selector: #selector(someWindowMoved(_:)),
             name: NSWindow.didMoveNotification, object: nil)
 
-        // The buttons need a layout pass before their positions can be trusted.
-        collapseWhenReady(attempt: 0)
+        // The buttons need a layout pass before their positions can be trusted. Once the
+        // bar is ready, honour the chosen auto-hide delay instead of hiding immediately.
+        prepareAfterLaunch(attempt: 0)
     }
 
     // MARK: - Seating
@@ -659,23 +660,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         Log.note("Showing: \(layoutDescription())")
     }
 
-    private func collapseWhenReady(attempt: Int) {
+    private func prepareAfterLaunch(attempt: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self, !self.isCollapsed else { return }
             if self.reseating {
-                self.collapseWhenReady(attempt: attempt)
+                self.prepareAfterLaunch(attempt: attempt)
             } else if self.assignRoles(), self.blockIsWhole {
-                // A fresh install stays open until the user hides on purpose.
-                if self.preferences.hasHiddenBefore {
-                    self.collapse()
+                if AutoHideSchedule.shouldScheduleAfterLaunch(
+                    hasHiddenBefore: self.preferences.hasHiddenBefore,
+                    autoHideEnabled: self.preferences.autoHide) {
+                    Log.note("Menu bar ready after launch. Auto-hide will run in \(Int(self.preferences.autoHideSeconds)) seconds.")
+                    self.scheduleAutoHideIfNeeded()
                 } else {
-                    Log.note("First launch: staying open. \(self.layoutDescription())")
+                    Log.note("Launch: staying open until a manual hide or enabled auto-hide. \(self.layoutDescription())")
                 }
             } else if attempt < 6 {
                 self.reseatIfBroken()
-                self.collapseWhenReady(attempt: attempt + 1)
+                self.prepareAfterLaunch(attempt: attempt + 1)
             } else {
-                Log.note("Did not hide: the menu bar never settled. \(self.layoutDescription())")
+                Log.note("Launch: the menu bar never settled. Leaving controls visible. \(self.layoutDescription())")
             }
         }
     }
@@ -687,10 +690,31 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         autoHideTimer = nil
         guard preferences.autoHide, !isCollapsed else { return }
         let timer = Timer(timeInterval: preferences.autoHideSeconds, repeats: false) { [weak self] _ in
-            self?.collapse()
+            guard let self else { return }
+            self.autoHideTimer = nil
+            self.hideAfterMenuBarSettles(attempt: 0)
         }
         RunLoop.main.add(timer, forMode: .common)
         autoHideTimer = timer
+    }
+
+    /// Auto-hide can fire while a system control, such as brightness, has a popover open.
+    /// During that short change macOS reports incomplete item positions. Wait for usable
+    /// positions instead of leaving Duck permanently open.
+    private func hideAfterMenuBarSettles(attempt: Int) {
+        guard preferences.autoHide, !isCollapsed else { return }
+        guard !reseating, assignRoles(), blockIsWhole else {
+            guard AutoHideSchedule.shouldRetry(after: attempt) else {
+                Log.note("Auto-hide gave up after \(attempt) retries: the menu bar stayed unsettled. \(layoutDescription())")
+                return
+            }
+            Log.note("Auto-hide waiting for the menu bar to settle, retry \(attempt + 1)/\(AutoHideSchedule.maximumRetries).")
+            DispatchQueue.main.asyncAfter(deadline: .now() + AutoHideSchedule.retryDelay) { [weak self] in
+                self?.hideAfterMenuBarSettles(attempt: attempt + 1)
+            }
+            return
+        }
+        collapse()
     }
 
     // MARK: - Positions
