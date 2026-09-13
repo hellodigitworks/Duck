@@ -1,7 +1,7 @@
 # Duck health
 
-Status: GREEN. No new commits since the last run. Deploy in sync: `site/` is unchanged since deployment `5a5059b3` at `dd98acf`. Live answers 200 at 0.8s with 0 console errors. The gate was not run tonight because neither `src/` nor `tests/` changed.
-Checked: 2026-09-12 00:04 IST, Yard
+Status: AMBER. Three commits since the last run. The gate passes, 32 checks. The site is local ahead: `site/appcast.xml` and four new lines in `site/_headers` are not live, and `/appcast.xml` answers 200 with the home page's HTML. Nobody is hurt today because Duck 1.1.0, the first build that reads that feed, is not released: the latest GitHub release is 1.0.1.
+Checked: 2026-09-13 00:04 IST, Yard
 
 ## Live
 | Address | Result | Note |
@@ -12,9 +12,9 @@ Checked: 2026-09-12 00:04 IST, Yard
 None besides main. The working tree is clean.
 
 ## Deploy state
-
-- Gate: `zsh scripts/test.sh` was run tonight, because `src/` and `tests/` both changed since the last run. All 37 checks passed, exit 0.
-- In sync. Last production deployment `5a5059b3`, commit `dd98acf`, 4 days old. `git diff --name-only dd98acf..main -- site/` returns nothing, so none of the three new commits changes the download page. The download button points at the GitHub release, not at anything we host.
+- Gate: `zsh scripts/test.sh` run tonight because `src/` and `tests/` changed. All 32 checks passed, exit 0. `2363360` removed the old update-check tests along with the code they tested.
+- **Local ahead.** Last production deployment `5a5059b3` at `dd98acf`, 6 days old. `git log dd98acf..main -- site/` returns `2363360`, which adds `site/appcast.xml` and a no-cache rule for it in `site/_headers`. Live `/appcast.xml` answers 200, `text/html`, 6,929 bytes: the home page, not the feed.
+- Order matters: deploy the site before releasing 1.1.0 on GitHub.
 - Deploys by: `npx wrangler pages deploy site --project-name tuck --branch main`
 
 ## Open issues
@@ -26,6 +26,7 @@ None besides main. The working tree is clean.
 Not a new finding, just kept on record: the registry still lists Duck at tier 1 on the worker's own reading, not a decision he made, and the Cloudflare Pages project is still called `tuck` from the app's earlier name while the domain is `duck`. Neither should be renamed without him.
 
 ## Reviewed changes
+- 2026-09-13: three commits. `e45d317` fixes auto-hide timing after launch, with a test. ok. `2363360` "Duck 1.1.0: it brings its own next version" replaces the home-made update check with a feed at `https://duck.hellodigitworks.com/appcast.xml` (set in `scripts/make-app.sh:93`), adds the feed under `site/` with a no-cache rule, and removes `src/data/UpdateCheck.swift` with its tests. **Concern:** the feed must be live before 1.1.0 is released, or every 1.1.0 install checks for updates against an HTML page. `5fb020b` puts a switch on the daily look in Preferences. ok. No secret, no real name. homebrew-duck gained `0b31db4`, the cask moved to 1.0.1 with its checksum. ok
 - 2026-09-11: three commits. `8e410aa` "The line stands out past the icons": changes `src/app/Seating.swift`, `src/app/StatusBarController.swift`, `src/ui/Mark.swift`, `src/ui/PreferencesView.swift` and the README. ok. `6b6c06d` "Duck 1.5.0: the version in the foot opens what changed": adds `src/data/ReleaseNotes.swift`, `src/ui/ReleaseNotesPanel.swift`, `src/data/Preferences.swift`, a new `VERSION` file and 44 lines of new tests. ok, and the new behaviour is covered by tests. `be758c7` "Duck 1.0.0: the number starts where the launch does": takes `VERSION` from 1.5.0 down to 1.0.0 and trims the changelog to one entry. The version number going down is deliberate and the commit message says why. ok. Worth keeping on record: `tests/DuckChecks.swift` still uses 1.5.0 and 1.5.1 as its example strings, which is correct, because those tests check the comparison logic and not the shipped number. No secret, no real name and no stray print statement in any of the three
 
 - 2026-09-07: nine commits. `8711941` adds a Homebrew cask list, `0a91b98` says when icons are out of reach, `c92c586` moves the five items together, `8f261d5` carries the line through the mark; earlier in the day `fae816b` and `dd98acf` shipped 1.4.1 and 1.4.2, the approved window layout and a Dock tile that follows dark mode, and `9309398`, `f9703c8` and `7556af7` put the install clip on the page at 4K. ok as a set. Four of the nine changed `site/` and were deployed; the last four are Swift, README and the cask script and change nothing the website serves, so the site is not waiting on anything. Open issue 2 closes: the mark, its icons and its share image are live, checked by fetching each one at the exact version the page asks for
