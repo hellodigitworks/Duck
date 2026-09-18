@@ -1,7 +1,11 @@
 # Duck health
 
-Status: AMBER, fifth night, and it is the same one line. `https://duck.hellodigitworks.com/appcast.xml` **still answers 200 `text/html` with 6,929 bytes** — the home page, not the update feed — checked 09:38 IST. The home page itself is 200 and renders "A quieter menu bar." with the menu-bar illustration, 0/0 errors both widths. Four commits are ahead of `origin/main` and two of them are real code, 1.1.0 and the daily-look switch. Publish the site before 1.1.0 is released, or every 1.1.0 install checks for updates against an HTML page.
-Checked: 2026-09-18 01:22 IST, Yard. The Mac slept mid-run and the writing finished about 09:50 IST, so this run is past the two hour line: fixes, showcases and gates were skipped.
+Status: AMBER. Landing draws, 0/0 errors. **`/appcast.xml` still answers 200 `text/html` with 6,929 bytes, the home page, not the feed, sixth night.** Two real commits unpushed: 1.1.0 and the daily-look switch. Deploy the site before 1.1.0 is released.
+Checked: 2026-09-19 00:03 IST, Yard. Ran on time and inside the budget: live pass, shots at both widths opened by eye, branches, chats and Open checks.
+
+Tonight, 2026-09-19:
+- Deploy: `npx wrangler pages deploy site --project-name tuck --branch main` from `Duck`.
+- Gate not run: nothing in `src/` or `tests/` changed.
 
 ## Live
 | Address | Result | Note |
