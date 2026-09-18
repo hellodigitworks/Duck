@@ -1,7 +1,7 @@
 # Duck health
 
-Status: AMBER, unchanged. No new commits. The site is still local ahead of deployment `dd98acf`: `https://duck.hellodigitworks.com/appcast.xml` answers 200 with 6,929 bytes of the home page's HTML, checked 12:01 IST. Live home 200, 0 console errors at both widths. Gate not run, nothing in `src/` or `tests/` changed. Whether 1.1.0 has been released on GitHub was not checked tonight: the GitHub API was dropping connections.
-Checked: 2026-09-14 00:09 IST, Yard. The Mac slept through much of the run, so it finished at 12:05 IST.
+Status: AMBER, fifth night, and it is the same one line. `https://duck.hellodigitworks.com/appcast.xml` **still answers 200 `text/html` with 6,929 bytes** — the home page, not the update feed — checked 09:38 IST. The home page itself is 200 and renders "A quieter menu bar." with the menu-bar illustration, 0/0 errors both widths. Four commits are ahead of `origin/main` and two of them are real code, 1.1.0 and the daily-look switch. Publish the site before 1.1.0 is released, or every 1.1.0 install checks for updates against an HTML page.
+Checked: 2026-09-18 01:22 IST, Yard. The Mac slept mid-run and the writing finished about 09:50 IST, so this run is past the two hour line: fixes, showcases and gates were skipped.
 
 ## Live
 | Address | Result | Note |
