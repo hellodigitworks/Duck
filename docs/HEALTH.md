@@ -1,11 +1,7 @@
 # Duck health
 
-Status: AMBER. Landing draws, 0/0 errors. **`/appcast.xml` still answers 200 `text/html` with 6,929 bytes, the home page, not the feed, sixth night.** Two real commits unpushed: 1.1.0 and the daily-look switch. Deploy the site before 1.1.0 is released.
-Checked: 2026-09-19 00:03 IST, Yard. Ran on time and inside the budget: live pass, shots at both widths opened by eye, branches, chats and Open checks.
-
-Tonight, 2026-09-19:
-- Deploy: `npx wrangler pages deploy site --project-name tuck --branch main` from `Duck`.
-- Gate not run: nothing in `src/` or `tests/` changed.
+Status: AMBER. Landing draws, 0/0 errors. **`/appcast.xml` still answers 200 `text/html` with 6,929 bytes, the home page, not the feed, seventh night.** Deploy the site before 1.1.0 is released: `npx wrangler pages deploy site --project-name tuck --branch main` from `Duck`.
+Checked: 2026-09-20 00:04 IST, Yard. Ran on time and inside the budget: branches, live pass, shots at both widths opened by eye, chats and Open checks.
 
 ## Live
 | Address | Result | Note |
