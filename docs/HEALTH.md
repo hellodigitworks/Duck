@@ -1,7 +1,7 @@
 # Duck health
 
-Status: AMBER. Landing draws, 0/0 errors. **`/appcast.xml` still answers 200 `text/html` with 6,929 bytes, the home page, not the feed, seventh night.** Deploy the site before 1.1.0 is released: `npx wrangler pages deploy site --project-name tuck --branch main` from `Duck`.
-Checked: 2026-09-20 00:04 IST, Yard. Ran on time and inside the budget: branches, live pass, shots at both widths opened by eye, chats and Open checks.
+Status: GREEN. The update feed is live. `/appcast.xml` answers 200 `application/xml`, 1,272 bytes, so the seven-night standing item is closed and 1.1.0 can be released whenever Swayam wants. Download page draws at both widths, 0 console errors.
+Checked: 2026-09-21 00:22 IST, Yard. Ran on time and inside the budget: branches, live pass, shots at both widths opened by eye, chats and Open checks.
 
 ## Live
 | Address | Result | Note |
@@ -12,9 +12,8 @@ Checked: 2026-09-20 00:04 IST, Yard. Ran on time and inside the budget: branches
 None besides main. The working tree is clean.
 
 ## Deploy state
-- Gate: `zsh scripts/test.sh` run tonight because `src/` and `tests/` changed. All 32 checks passed, exit 0. `2363360` removed the old update-check tests along with the code they tested.
-- **Local ahead.** Last production deployment `5a5059b3` at `dd98acf`, 6 days old. `git log dd98acf..main -- site/` returns `2363360`, which adds `site/appcast.xml` and a no-cache rule for it in `site/_headers`. Live `/appcast.xml` answers 200, `text/html`, 6,929 bytes: the home page, not the feed.
-- Order matters: deploy the site before releasing 1.1.0 on GitHub.
+- **In sync.** `site/` last changed in `2363360` (Duck 1.1.0) and that work is live, proved by `/appcast.xml` answering 200 `application/xml` tonight.
+- The folder is seven commits ahead of origin, every one of them a Yard health record, never pushed by design.
 - Deploys by: `npx wrangler pages deploy site --project-name tuck --branch main`
 
 ## Open issues
@@ -26,6 +25,7 @@ None besides main. The working tree is clean.
 Not a new finding, just kept on record: the registry still lists Duck at tier 1 on the worker's own reading, not a decision he made, and the Cloudflare Pages project is still called `tuck` from the app's earlier name while the domain is `duck`. Neither should be renamed without him.
 
 ## Reviewed changes
+- 2026-09-21: no code commits since the last run. The standing finding is closed: `https://duck.hellodigitworks.com/appcast.xml` now answers 200 `application/xml` with 1,272 bytes, where for seven nights it answered 200 `text/html` with the home page. Somebody deployed `site/` since the last run. The gate `zsh scripts/test.sh` was not run, because nothing under `src/` or `tests/` changed and the gate builds Swift, which is slow. Live re-checked: both addresses 200, 0 console errors and 0 failed requests at both widths.
 - 2026-09-13: three commits. `e45d317` fixes auto-hide timing after launch, with a test. ok. `2363360` "Duck 1.1.0: it brings its own next version" replaces the home-made update check with a feed at `https://duck.hellodigitworks.com/appcast.xml` (set in `scripts/make-app.sh:93`), adds the feed under `site/` with a no-cache rule, and removes `src/data/UpdateCheck.swift` with its tests. **Concern:** the feed must be live before 1.1.0 is released, or every 1.1.0 install checks for updates against an HTML page. `5fb020b` puts a switch on the daily look in Preferences. ok. No secret, no real name. homebrew-duck gained `0b31db4`, the cask moved to 1.0.1 with its checksum. ok
 - 2026-09-11: three commits. `8e410aa` "The line stands out past the icons": changes `src/app/Seating.swift`, `src/app/StatusBarController.swift`, `src/ui/Mark.swift`, `src/ui/PreferencesView.swift` and the README. ok. `6b6c06d` "Duck 1.5.0: the version in the foot opens what changed": adds `src/data/ReleaseNotes.swift`, `src/ui/ReleaseNotesPanel.swift`, `src/data/Preferences.swift`, a new `VERSION` file and 44 lines of new tests. ok, and the new behaviour is covered by tests. `be758c7` "Duck 1.0.0: the number starts where the launch does": takes `VERSION` from 1.5.0 down to 1.0.0 and trims the changelog to one entry. The version number going down is deliberate and the commit message says why. ok. Worth keeping on record: `tests/DuckChecks.swift` still uses 1.5.0 and 1.5.1 as its example strings, which is correct, because those tests check the comparison logic and not the shipped number. No secret, no real name and no stray print statement in any of the three
 
