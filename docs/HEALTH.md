@@ -1,30 +1,31 @@
 # Duck health
 
-Status: GREEN, in sync, clean. Nothing landed but Yard's own health record.
-Checked: 2026-09-22 00:22 IST, Yard. Branches, the live pass, shots at both widths opened by eye, gates, chats and the Open checks.
+Status: GREEN, in sync, clean.
+Checked: 2026-09-23 00:04 IST, Yard. Branches, the live pass, shots at both widths opened by eye, the Open checks.
 
 ## Live
 | Address | Result | Note |
 |---|---|---|
-| https://duck.hellodigitworks.com/ | 200, 6.9 KB | GREEN |
-| https://tuck-2nv.pages.dev/ | 200, 6.9 KB | GREEN |
+| https://duck.hellodigitworks.com/ | 200, 1.3s desktop, 0.9s phone, 0 console errors | GREEN |
+| https://tuck-2nv.pages.dev/ | 200 | GREEN |
+| /appcast.xml | 200, 1,272 bytes, `cache-control: public, max-age=0, must-revalidate` | GREEN |
 
-The live pass flagged this app RED on its first attempt, with five asset checks timing out on DNS resolution. Re-checked every one by hand: the share image, the manifest and all three icons answer 200, the share image at 123,039 bytes. It was this Mac's network, not the site. Screenshots looked at, both widths: the page draws with "A quieter menu bar", the menu-bar illustration and the Install for Mac button, 0 console errors.
+Screenshot looked at, both widths: the page draws "A quieter menu bar.", the menu-bar illustration with the red cross on one icon, and Install for Mac. Nothing broken on screen.
 
 ## Branches
 No branches besides main. Working tree clean.
 
 ## Deploy state
-**In sync.** 8 ahead of origin, all Yard's own health records. `/appcast.xml` is live and 1.1.0 can be released whenever you want.
+**In sync.** The last deployment was two days ago. Nine commits sit ahead of origin, but the live `site/index.html` and `site/appcast.xml` both hash identical to the folder's. The one file that differs is `site/_headers`, which adds an explicit no-stale rule for `/appcast.xml` — and the live server already answers that address with `max-age=0, must-revalidate`, so nothing a person can see is waiting. The update feed is live and current.
 
 ## Open issues
 None open.
 
 ## Reviewed changes
-`e699cdd`, Yard's health record from last night. Nothing else.
+Nothing new since the last run. `7107560` is Yard's own health record from last night.
 
 ## Showcases waiting
 None.
 
 ## Fixed by Yard
-Nothing needed. The `zsh scripts/test.sh` gate was not run: nothing under `src/` or `tests/` changed and the gate builds Swift.
+Nothing needed. The `zsh scripts/test.sh` gate was not run: nothing under `src/` or `tests/` changed since the last run and that gate builds Swift.
