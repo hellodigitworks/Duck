@@ -1,7 +1,8 @@
 # Duck health
 
 Status: GREEN, in sync, clean.
-Checked: 2026-09-23 00:04 IST, Yard. Branches, the live pass, shots at both widths opened by eye, the Open checks.
+Checked: 2026-09-24 00:04 IST, Yard. Nothing changed since 23 September: same live results, same branches, same deploy state, screenshots opened by eye at both widths again. Previous checks follow.
+Previous: 2026-09-23 00:04 IST, Yard. Branches, the live pass, shots at both widths opened by eye, the Open checks.
 
 ## Live
 | Address | Result | Note |
