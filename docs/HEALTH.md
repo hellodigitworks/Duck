@@ -2,6 +2,8 @@
 
 Status: GREEN, in sync, clean.
 Checked: 2026-09-25 00:04 IST, Yard. Nothing changed since 24 September: same live results, same branches, same deploy state, screenshots opened by eye at both widths again. Previous checks follow.
+
+25 September: tier 2 by Swayam's decision.
 Previous: 2026-09-23 00:04 IST, Yard. Branches, the live pass, shots at both widths opened by eye, the Open checks.
 
 ## Live
