@@ -36,7 +36,7 @@
 
   <link rel="preload" href="fonts/exposure-30.otf" as="font" type="font/otf" crossorigin />
   <link rel="preload" href="fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="css/duck.css?v=3" />
+  <link rel="stylesheet" href="css/duck.css?v=4" />
 </head>
 <body>
 
@@ -72,60 +72,17 @@
       </div>
     </div>
 
-    <!-- The way in: one button. It copies one line for Terminal and then says what to do
-         next. Files that arrive through curl carry no download tag, so macOS never shows
-         the "could not verify" warning an unsigned app gets. -->
-    <button class="button reveal" style="--i:2" type="button" id="install"
-      data-line="curl -fsSL https://duck.hellodigitworks.com/install.sh | sh">Install for Mac</button>
-    <code class="line" id="line" hidden>curl -fsSL https://duck.hellodigitworks.com/install.sh | sh</code>
-
-    <!-- Once the line is copied, how the install goes: the page, the copy, Spotlight, Terminal, the line, Enter, the mark
-         in the bar. Drawn, silent, loops. No controls, no picture in picture, no saving. -->
-    <video class="how" id="how" hidden muted loop playsinline preload="none"
-      poster="media/install.jpg?v=3" disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback"
-      oncontextmenu="return false"
-      aria-label="How Duck installs: the page, the copy, Spotlight, Terminal, the line pasted, Enter, Duck's mark in the menu bar, then hiding icons and bringing them back.">
-      <source src="media/install.mp4?v=3" type="video/mp4" />
-    </video>
+    <!-- The way in: one link. Duck.dmg from the latest release, signed and notarised, so it
+         opens with no warning: open it, drag Duck into Applications. -->
+    <a class="button reveal" style="--i:2"
+      href="https://github.com/hellodigitworks/Duck/releases/latest/download/Duck.dmg">Download for Mac</a>
+    <p class="needs reveal" style="--i:3">macOS 13 or later, Apple silicon. Free.</p>
   </main>
 
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     }
-
-    // One click copies the line and the button becomes the next step. Only if the browser
-    // will not hand over the clipboard does the line itself appear, to be copied by hand.
-    var install = document.getElementById('install');
-    var line = document.getElementById('line');
-    var how = document.getElementById('how');
-    var text = install.getAttribute('data-line');
-    // The clip opens under the button and plays on its own, silent, looping.
-    var show = function () {
-      if (!how.hidden) return;
-      how.hidden = false;
-      how.classList.add('open');
-      var play = how.play();
-      if (play && play.catch) play.catch(function () {});
-    };
-    install.addEventListener('click', function () {
-      var copied = function () {
-        install.textContent = 'Copied. Open Terminal, paste, press Enter.';
-        install.classList.add('done');
-        show();
-      };
-      var byHand = function () {
-        line.hidden = false;
-        install.textContent = 'Copy this line, then paste it in Terminal.';
-        install.classList.add('done');
-        show();
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(copied, byHand);
-      } else {
-        byHand();
-      }
-    });
   </script>
 </body>
 </html>

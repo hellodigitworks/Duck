@@ -135,45 +135,13 @@ h1 {
 .button:hover, .button:focus-visible { background: var(--ink); color: var(--paper); outline: none; }
 .button:active { opacity: 0.85; }
 
-button.button { cursor: pointer; }
-/* After the click the button is no longer a button: the same words, no border, no fill. */
-.button.done, .button.done:hover, .button.done:focus-visible {
-  background: transparent;
-  border-color: transparent;
-  color: var(--ink);
-  cursor: default;
-}
-/* The line itself, shown only when the clipboard was refused. */
-.line {
-  font-family: var(--mono);
+/* What it needs, right under the button. Closer to it than the page's gap, so the two read as one. */
+.needs {
+  font-family: var(--sans);
   font-size: 13px;
   color: var(--muted);
-  max-width: 100%;
-  margin-top: -20px;
-  padding: 0 8px;
-  word-break: break-all;
-  user-select: all;
-  -webkit-user-select: all;
+  margin: calc(-1 * clamp(20px, 4vh, 44px)) 0 0;
 }
-
-/* ---------- how it installs ---------- */
-/* The clip under the button. Hidden until the line is copied, then it rises in. */
-.how {
-  display: block;
-  width: min(100%, 720px);
-  aspect-ratio: 16 / 9;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: var(--card);
-  box-shadow: 0 6px 24px rgba(60, 44, 20, 0.07), 0 1px 2px rgba(60, 44, 20, 0.04);
-  opacity: 0;
-  transform: translateY(14px);
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-.how[hidden] { display: none; }
-.how.open { animation: rise 0.9s var(--ease) forwards; }
 
 /* ---------- arrival ---------- */
 .reveal {
@@ -186,7 +154,6 @@ button.button { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal { animation: none; opacity: 1; transform: none; }
-  .how.open { animation: none; opacity: 1; transform: none; }
   .hides, .mark { animation: none; }
   .mark { transform: rotate(45deg); }
   .button { transition: none; }

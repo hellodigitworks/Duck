@@ -84,31 +84,12 @@ cask "duck" do
 
   app "Duck.app"
 
-  # Duck is free and open source, and is not signed with an Apple developer
-  # certificate, which costs 99 dollars a year. macOS tags anything Homebrew
-  # downloads and then refuses to open what it cannot verify, so the tag comes
-  # off here and the caveats below say so. The one-line installer on the site
-  # never picks the tag up in the first place: macOS only tags what a browser
-  # saved, and curl is not a browser.
-  postflight_steps do
-    run "/usr/bin/xattr",
-        args:  ["-dr", "com.apple.quarantine", "Duck.app"],
-        chdir: "."
-  end
-
   uninstall quit: "com.hdw.duck"
 
   zap trash: [
     "~/Library/Preferences/com.hdw.duck.plist",
     "~/Library/Caches/com.hdw.duck",
   ]
-
-  caveats <<~EOS
-    Duck is not signed with an Apple developer certificate, so this cask
-    removes the quarantine tag macOS puts on downloads. Read the app's source
-    at https://github.com/{REPO} before you trust it, the same as any
-    unsigned app.
-  EOS
 end
 ''')
     print(f"  {CASK.relative_to(TAP.parent)}")
