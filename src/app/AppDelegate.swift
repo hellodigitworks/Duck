@@ -83,7 +83,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// The Dock tile follows the Mac: cream with an ink duck in light mode, ink with a
     /// cream duck in dark. An .icns holds one look, so the dark one is a PNG in the bundle
     /// and the app swaps it in itself whenever the appearance changes.
+    /// macOS 26 and later do this themselves from the icon in Assets.car, in glass, so
+    /// there the swap stays out of the way: a flat PNG would only cover the real thing.
     private func followAppearance() {
+        if #available(macOS 26, *) { return }
         appearanceWatch = NSApp.observe(\.effectiveAppearance, options: [.initial, .new]) { [weak self] _, _ in
             self?.dockTileForAppearance()
         }

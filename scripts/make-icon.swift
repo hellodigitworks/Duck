@@ -4,9 +4,17 @@
 // the duck in cream, goes to icons/AppIcon-dark.png: the app puts that one in the Dock
 // while the Mac is in dark mode, since an .icns cannot carry two looks on its own.
 //
+// macOS 26 and later draw app icons themselves, in glass, and in light, dark, clear and
+// tinted looks. They read icons/AppIcon.icon, an Icon Composer document this script also
+// writes: the same cream tile and ink duck, swapped to an ink tile and cream duck in dark
+// mode. Given only the .icns, macOS darkens the cream tile on its own and the ink duck all
+// but disappears into it. make-app.sh compiles the document into the app with actool.
+//
 // Regenerate with: swift scripts/make-icon.swift
 // Input:  icons/duck.svg, the master. Change the duck there, in Illustrator, never here.
-// Output: icons/AppIcon.icns and the intermediate icons/AppIcon.iconset.
+// Output: icons/AppIcon.icns, icons/AppIcon-dark.png, icons/AppIcon.icon and the
+//         intermediate icons/AppIcon.iconset. Open AppIcon.icon in Icon Composer (inside
+//         Xcode) to see every look, but change it here, or the next run undoes it.
 // make-images.swift reads the same duck.svg for the page, the README and the lab shot,
 // so one drawing is the duck everywhere.
 
@@ -93,3 +101,45 @@ task.arguments = ["-c", "icns", iconset.path, "-o", iconsDir.appendingPathCompon
 try task.run()
 task.waitUntilExit()
 print(task.terminationStatus == 0 ? "AppIcon.icns and AppIcon-dark.png written from icons/duck.svg" : "iconutil failed")
+
+// The Icon Composer document: a folder holding icon.json and the drawing it points at.
+// Colours are the cream and ink above, written the way Icon Composer writes them.
+// Scale 10.2 puts the 58pt-wide drawing about 72% across the tile, as in the .icns.
+let document = iconsDir.appendingPathComponent("AppIcon.icon")
+let assets = document.appendingPathComponent("Assets")
+try? FileManager.default.removeItem(at: document)
+try FileManager.default.createDirectory(at: assets, withIntermediateDirectories: true)
+try FileManager.default.copyItem(
+    at: iconsDir.appendingPathComponent("duck.svg"), to: assets.appendingPathComponent("duck.svg"))
+func srgb(_ c: NSColor) -> String {
+    String(format: "srgb:%.5f,%.5f,%.5f,1.00000", c.redComponent, c.greenComponent, c.blueComponent)
+}
+let json = """
+{
+  "fill-specializations" : [
+    { "value" : { "solid" : "\(srgb(cream))" } },
+    { "appearance" : "dark", "value" : { "solid" : "\(srgb(ink))" } }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            { "value" : { "solid" : "\(srgb(ink))" } },
+            { "appearance" : "dark", "value" : { "solid" : "\(srgb(cream))" } }
+          ],
+          "image-name" : "duck.svg",
+          "name" : "duck",
+          "position" : { "scale" : 10.2, "translation-in-points" : [ 0, 0 ] }
+        }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : false, "value" : 0.5 }
+    }
+  ],
+  "supported-platforms" : { "squares" : "shared" }
+}
+
+"""
+try json.write(to: document.appendingPathComponent("icon.json"), atomically: true, encoding: .utf8)
+print("AppIcon.icon written from icons/duck.svg")

@@ -3,20 +3,17 @@
   <channel>
     <title>Duck updates</title>
     <item>
-      <title>Duck 1.1.0</title>
-      <pubDate>Fri, 25 Sep 2026 10:43:24 +0000</pubDate>
-      <sparkle:version>1.1.0</sparkle:version>
-      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <title>Duck 1.1.1</title>
+      <pubDate>Fri, 25 Sep 2026 11:06:02 +0000</pubDate>
+      <sparkle:version>1.1.1</sparkle:version>
+      <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[
     <ul>
-      <li>Duck is signed with hdw's Apple Developer ID and notarised by Apple. It opens straight away, with no warning and no trip to Privacy & Security.</li>
-      <li>Duck now comes as a disk image. Open it and drag Duck into Applications.</li>
-      <li>Duck updates itself. It looks for a newer release once a day, says so only when there is one, and downloads, checks and installs it once you agree. Choose Check for Updates from its menu to look right away.</li>
-      <li>Look for updates daily, in Preferences, with Check now under it. Turn the daily look off and Duck only ever looks when you ask.</li>
+      <li>Duck's icon follows the Mac's look on macOS 26 and later: a cream tile with an ink duck in light mode, an ink tile with a cream duck in dark, and the clear and tinted styles too. Before, macOS darkened the icon on its own and the duck all but disappeared into it.</li>
     </ul>
       ]]></description>
-      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.0/Duck.zip" length="1593900" type="application/octet-stream" sparkle:edSignature="+Fm+GfsQ60ONS2qy+tZbLANw3AXxmtjVP+yE22ZrfFpmobqOuU683DdYIITAJ9g1er41gUDHHZ1boarzmDG5DQ==" />
+      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.1/Duck.zip" length="3389277" type="application/octet-stream" sparkle:edSignature="cFNVQ9wCO0MgLE+x6TK3gBr+f9oXfbIVBuHH9WKq9ltcPoDJ6B91PN9NvTu2SqEnApkMXSnFHqfY8SqED3sLBg==" />
     </item>
   </channel>
 </rss>

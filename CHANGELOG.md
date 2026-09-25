@@ -4,6 +4,10 @@ Every release of Duck, newest first.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-25
+### Fixed
+- Duck's icon follows the Mac's look on macOS 26 and later: a cream tile with an ink duck in light mode, an ink tile with a cream duck in dark, and the clear and tinted styles too. Before, macOS darkened the icon on its own and the duck all but disappeared into it.
+
 ## [1.1.0] - 2026-09-25
 ### Added
 - Duck is signed with hdw's Apple Developer ID and notarised by Apple. It opens straight away, with no warning and no trip to Privacy & Security.

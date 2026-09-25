@@ -1,0 +1,24 @@
+{
+  "fill-specializations" : [
+    { "value" : { "solid" : "srgb:0.95700,0.93700,0.90200,1.00000" } },
+    { "appearance" : "dark", "value" : { "solid" : "srgb:0.07800,0.07100,0.05900,1.00000" } }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            { "value" : { "solid" : "srgb:0.07800,0.07100,0.05900,1.00000" } },
+            { "appearance" : "dark", "value" : { "solid" : "srgb:0.95700,0.93700,0.90200,1.00000" } }
+          ],
+          "image-name" : "duck.svg",
+          "name" : "duck",
+          "position" : { "scale" : 10.2, "translation-in-points" : [ 0, 0 ] }
+        }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : false, "value" : 0.5 }
+    }
+  ],
+  "supported-platforms" : { "squares" : "shared" }
+}

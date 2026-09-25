@@ -36,9 +36,21 @@ mkdir -p "$APP/Contents/Frameworks"
 cp -R "$SPARKLE_FRAMEWORK" "$APP/Contents/Frameworks/"
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Duck"
 
-if [ ! -f icons/AppIcon.icns ]; then
+if [ ! -f icons/AppIcon.icns ] || [ ! -d icons/AppIcon.icon ]; then
   swift scripts/make-icon.swift
 fi
+# Two icons. macOS 26 and later read Assets.car, compiled here from the Icon Composer
+# document, and draw it in glass with a proper dark look. Older versions read the .icns.
+# actool writes a .icns of its own too, which is dropped: ours is the one older Macs know.
+# actool cannot read the document straight out of the Drive folder, so it gets a copy.
+ICON_OUT="$SCRATCH/icon"
+rm -rf "$ICON_OUT"
+mkdir -p "$ICON_OUT"
+ditto icons/AppIcon.icon "$ICON_OUT/AppIcon.icon"
+xcrun actool "$ICON_OUT/AppIcon.icon" --compile "$ICON_OUT" --platform macosx \
+  --minimum-deployment-target 13.0 --app-icon AppIcon \
+  --output-partial-info-plist "$ICON_OUT/partial.plist" --errors --warnings > /dev/null
+cp "$ICON_OUT/Assets.car" "$APP/Contents/Resources/Assets.car"
 cp icons/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # The duck itself, for the foot of the window, and the dark Dock tile.
 cp icons/duck.svg "$APP/Contents/Resources/duck.svg"
@@ -66,6 +78,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleExecutable</key>
     <string>Duck</string>
     <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
