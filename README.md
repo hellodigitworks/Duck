@@ -111,11 +111,12 @@ ad-hoc otherwise. Notarising needs the Apple login saved once on this Mac under 
 duck-notary:
 
 ```bash
-xcrun notarytool store-credentials duck-notary --team-id 3NLU2459VW
+xcrun notarytool store-credentials duck-notary --key <AuthKey file> --key-id <key ID> --issuer <issuer ID>
 ```
 
-It asks for the Apple ID and an app-specific password made at appleid.apple.com. Both
-stay in the keychain, never in the project.
+The key is an App Store Connect team key with Developer access, the same one FieldCut
+notarises with. Its file, key ID and issuer ID are listed in `~/.fieldcut/apple.env`.
+The command copies the key into the keychain, never into the project.
 
 Tests:
 

@@ -2,23 +2,21 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
     <title>Duck updates</title>
-    <link>https://duck.hellodigitworks.com/</link>
-    <description>Every release of Duck, newest first.</description>
-    <language>en</language>
     <item>
       <title>Duck 1.1.0</title>
-      <link>https://github.com/hellodigitworks/Duck/releases/tag/v1.1.0</link>
+      <pubDate>Fri, 25 Sep 2026 10:43:24 +0000</pubDate>
       <sparkle:version>1.1.0</sparkle:version>
       <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-      <pubDate>Sat, 12 Sep 2026 17:28:48 +0530</pubDate>
       <description><![CDATA[
-<h3>Added</h3>
-<ul>
-<li>Duck updates itself. It looks for a newer release once a day, says so only when there is one, and downloads, checks and installs it once you agree. Choose Check for Updates from its menu to look right away.</li>
-</ul>
+    <ul>
+      <li>Duck is signed with hdw's Apple Developer ID and notarised by Apple. It opens straight away, with no warning and no trip to Privacy & Security.</li>
+      <li>Duck now comes as a disk image. Open it and drag Duck into Applications.</li>
+      <li>Duck updates itself. It looks for a newer release once a day, says so only when there is one, and downloads, checks and installs it once you agree. Choose Check for Updates from its menu to look right away.</li>
+      <li>Look for updates daily, in Preferences, with Check now under it. Turn the daily look off and Duck only ever looks when you ask.</li>
+    </ul>
       ]]></description>
-      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.0/Duck.zip" length="1530861" type="application/octet-stream" sparkle:edSignature="Ip6sn456FxBL/SBxy2uQ0QMGQwHmpX4fUkxumg20iomUSKtoRK3Fq6bTgSHAxK7fHfCZHqxv30YKNG7ItjI3Dg==" />
+      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.0/Duck.zip" length="1593900" type="application/octet-stream" sparkle:edSignature="+Fm+GfsQ60ONS2qy+tZbLANw3AXxmtjVP+yE22ZrfFpmobqOuU683DdYIITAJ9g1er41gUDHHZ1boarzmDG5DQ==" />
     </item>
   </channel>
 </rss>
