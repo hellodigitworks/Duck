@@ -1,9 +1,8 @@
 # Duck health
 
 Status: GREEN, in sync, clean.
-Checked: 2026-09-25 17:06 IST, with Swayam, after Duck became a signed, notarised app with a DMG. Live pass, deploy state, release files and branches all checked. Previous checks follow.
-
-Previous: 2026-09-25 00:04 IST, Yard. Nothing changed since 24 September.
+Checked: 2026-09-26 12:17 IST, Yard. A daytime run: the Mac slept for about fifty minutes partway through, so the screenshots were taken again once the network was back. Live pass, shots at both widths opened by eye, the Open checks, four new commits reviewed. `zsh scripts/test.sh`: all 32 checks pass. Live `appcast.xml` hashes identical to the folder, production deployment is `34b6352`.
+Previous: 2026-09-25 17:06 IST, with Swayam.
 25 September: tier 2 by Swayam's decision.
 
 ## Release
@@ -37,9 +36,14 @@ No branches besides main. Working tree clean.
 - **Exposure font licence.** The app ships `ExposureTrial-30.otf`, the trial. Swayam chose to ship it for now. Buy the licence before Duck gets wider attention.
 
 ## Reviewed changes
-- `aa6e594` Developer ID signing, hardened runtime, notarising in `make-app.sh --release`, the designed DMG (`make-dmg.sh`, `make-dmg-background.swift`), the DMG download on the page.
-- `c5d8e20` The update feed pointed at the notarised 1.1.0 zip.
-- `34b6352` Duck 1.1.1: an Icon Composer icon compiled into Assets.car, so macOS 26 and later draw a cream tile in light mode and an ink tile in dark. Before, macOS darkened the old icon itself and the duck disappeared. The install clip was removed from the site.
+Four commits since the last run, all made with Swayam on 25 September.
+
+- `aa6e594` signed with Developer ID, notarised, a designed DMG. **ok.** `site/sw.js` cache bumped to `duck-v7`.
+- `c5d8e20` the update feed points at the notarised 1.1.0 zip. **ok.**
+- `34b6352` 1.1.1, an icon macOS 26 draws in dark mode, and the unused install clip is gone from the site. **ok.** Answers his report of 25 September, now the `duck` check in `checks.md`, passing.
+- `c51a801` health record. **ok.**
+
+No secret-looking string. Notarising uses a keychain profile, no password in the repo.
 
 ## How a release goes now
 `zsh scripts/make-app.sh --release` signs, sends the app and the DMG to Apple, staples both, and writes `build/Duck.dmg` and `build/Duck.zip`. Notarising uses the keychain profile `duck-notary`, made from the same App Store Connect team key FieldCut uses. No Apple ID password is involved.
