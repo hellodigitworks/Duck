@@ -1,8 +1,8 @@
 # Duck health
 
 Status: GREEN, in sync, clean.
-Checked: 2026-09-26 12:17 IST, Yard. A daytime run: the Mac slept for about fifty minutes partway through, so the screenshots were taken again once the network was back. Live pass, shots at both widths opened by eye, the Open checks, four new commits reviewed. `zsh scripts/test.sh`: all 32 checks pass. Live `appcast.xml` hashes identical to the folder, production deployment is `34b6352`.
-Previous: 2026-09-25 17:06 IST, with Swayam.
+Checked: 2026-09-27 00:04 IST, Yard. Nothing changed since 26 September: same live results, same branches, same deploy state, screenshots opened by eye at both widths, the Open checks run. Nothing new to review. Live `appcast.xml` unchanged, production still `34b6352`.
+Previous: 2026-09-26 12:17 IST, Yard.
 25 September: tier 2 by Swayam's decision.
 
 ## Release
