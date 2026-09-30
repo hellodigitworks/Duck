@@ -1,8 +1,8 @@
 # Duck health
-
+Updated 2026-10-01 by Yard
 Status: GREEN, in sync, clean.
-Checked: 2026-09-30 10:50 IST, Yard. No run on 29 September: the midnight run did not happen, this one started at 10:50 IST on 30 September. Live pass exit 0 and unchanged since 28 September. Screenshots opened by eye at both widths: nothing blank or broken. No new commits since the last run. The Open checks run: 14 pass, 2 fail, both waiting on Swayam, no regressions.
-Previous: 2026-09-28 01:02 IST, Yard.
+Checked: 2026-10-01 00:04 IST, Yard, the first-of-month pass. Live pass exit 0, unchanged since 30 September. Screenshots opened by eye at both widths as two contact sheets: nothing blank or broken. The Open checks run: 14 pass, 2 fail, both waiting on Swayam, no regressions. No new commits.
+Previous: 2026-09-30 10:50 IST, Yard.
 25 September: tier 2 by Swayam's decision.
 
 ## Release
