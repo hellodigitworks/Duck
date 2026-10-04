@@ -18,5 +18,5 @@ compatibility_date = "2026-08-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "duck-stats"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "1dceddf7-b721-4cd9-ae05-dd1ecc95eb65"
 migrations_dir = "migrations"
