@@ -149,20 +149,20 @@ npx wrangler pages deploy . --project-name tuck --branch main
 
 ## Stats
 
-`duck.hellodigitworks.com/stats` shows how many Macs ran Duck each day, downloads per
-day, the version split and countries. Duck itself sends nothing new: the site counts the
-daily update check every copy already makes (`site/functions/appcast.xml.js`), and saves
-GitHub's download totals once a day. Each Mac is a hash of its network address with a
-salt that is deleted the next day, so no address is kept and no Mac can be followed
-across days. The numbers live in a free Cloudflare D1 database called duck-stats.
+`admin/stats.html` shows how many Macs ran Duck each day, downloads per day, the version
+split and countries. Open it from the Mac by double-click. It is never deployed: `admin/`
+sits outside `site/`, which is the only folder that goes live.
 
-Set up once, before the next deploy of `site/`:
+Duck itself sends nothing new. The site counts the daily update check every copy already
+makes (`site/functions/appcast.xml.js`) and saves GitHub's download totals once a day.
+Each Mac is a hash of its network address with a salt that is deleted the next day, so
+no address is kept and no Mac can be followed across days. The numbers live in a free
+Cloudflare D1 database called duck-stats, made by `scripts/make-stats-db.sh`.
 
-1. `zsh scripts/make-stats-db.sh` creates the database and writes its id into
-   `site/wrangler.toml`.
-2. In the Cloudflare dashboard, Zero Trust > Access > Applications, add a self-hosted
-   application for `duck.hellodigitworks.com/stats` with a policy that allows only your
-   email. The page answers on no other address, so the lock cannot be walked around.
+The page reads them from `/api/stats` on the site, which only answers with the right key.
+`zsh scripts/make-stats-key.sh` makes one, writes it into `admin/key.local.js` and gives
+the same key to the site. That file is gitignored: never commit, deploy or share it. The
+site picks up a new key on its next deploy.
 
 ## Folders
 
@@ -174,7 +174,8 @@ Set up once, before the next deploy of `site/`:
 | `scripts/` | Build script, test script, icon generator and image generator |
 | `icons/` | The duck in `duck.svg`, and the app icon made from it |
 | `fonts/` | Exposure and Inter, the two faces the app ships. Inter is generated, Exposure is licensed |
-| `site/` | The landing page, the install script and the update feed, deployed as they are |
+| `site/` | The landing page, the install script, the update feed and the stats API, deployed as they are |
+| `admin/` | The local stats page. Never deployed |
 | `tests/` | Checks for the settings, the mark and the release notes |
 | `docs/images/` | The pictures in this README, the social card and the lab shot. Generated |
 | `build/` | The release DMG and zip (generated, not committed). The app itself is built outside the project |

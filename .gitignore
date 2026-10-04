@@ -7,3 +7,7 @@ fonts/source/
 
 .wrangler/
 .claude/
+
+# The key the local stats page uses. Never committed, never deployed.
+admin/key.local.js
+site/.dev.vars

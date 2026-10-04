@@ -1,4 +1,5 @@
-// Duck stats: fetches /stats/data and draws it. No libraries, plain SVG.
+// Duck stats: asks the live site for the numbers with the key from key.local.js, and
+// draws them. No libraries, plain SVG.
 (() => {
   const $ = (id) => document.getElementById(id);
   const number = new Intl.NumberFormat('en-IN');
@@ -12,6 +13,9 @@
   const escape = (text) => String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
   let data = null;
+  const KEY = String(window.DUCK_STATS_KEY || '').trim();
+  // The live site, unless key.local.js points somewhere else for testing.
+  const API = String(window.DUCK_STATS_API || 'https://duck.hellodigitworks.com') + '/api/stats';
 
   // ---------- screen states ----------
   function show(state) {
@@ -24,7 +28,10 @@
     button.setAttribute('aria-busy', 'true');
     if (!data) show('loading');
     try {
-      const response = await fetch('/stats/data', { cache: 'no-store' });
+      if (!KEY) throw new Error('This Mac has no key file, so nothing can load. It is admin/key.local.js in the Duck folder, made by scripts/make-stats-key.sh.');
+      const response = await fetch(API, { cache: 'no-store', headers: { authorization: `Bearer ${KEY}` } }).catch(() => {
+        throw new Error('Could not reach the site. Check the connection and try again.');
+      });
       const body = await response.json().catch(() => null);
       if (!response.ok || !body || body.error) throw new Error((body && body.error) || `The site answered ${response.status}.`);
       data = body;

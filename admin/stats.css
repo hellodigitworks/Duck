@@ -1,15 +1,15 @@
-/* Duck stats. The landing page's paper, ink and one orange, with a dark side for night.
+/* Duck stats, the local page. The landing page's paper, ink and one orange, with a dark side for night.
    Numbers in Inter, the one headline in Exposure. */
 
 @font-face {
   font-family: "Exposure";
-  src: url("/fonts/exposure-30.otf") format("opentype");
+  src: url("../site/fonts/exposure-30.otf") format("opentype");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Inter";
-  src: url("/fonts/inter.woff2") format("woff2");
+  src: url("../site/fonts/inter.woff2") format("woff2");
   font-weight: 400 700;
   font-display: swap;
 }

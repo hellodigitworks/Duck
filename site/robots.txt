@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /stats
 Sitemap: https://duck.hellodigitworks.com/sitemap.xml

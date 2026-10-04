@@ -26,10 +26,10 @@ self.addEventListener('activate', (event) => {
 });
 
 // Network first, cache as the fallback: a fresh page when there is signal, the last one when there is not.
-// The stats page is private and always live, so it is never kept on the device.
+// The API is always live, so its answers are never kept on the device.
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  if (event.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/stats')) return;
+  if (event.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
   event.respondWith(
     fetch(event.request)
       .then((response) => {
