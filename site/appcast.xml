@@ -3,17 +3,19 @@
   <channel>
     <title>Duck updates</title>
     <item>
-      <title>Duck 1.1.1</title>
-      <pubDate>Fri, 25 Sep 2026 11:06:02 +0000</pubDate>
-      <sparkle:version>1.1.1</sparkle:version>
-      <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
+      <title>Duck 1.1.2</title>
+      <pubDate>Sun, 04 Oct 2026 08:01:30 +0000</pubDate>
+      <sparkle:version>1.1.2</sparkle:version>
+      <sparkle:shortVersionString>1.1.2</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[
     <ul>
-      <li>Duck's icon follows the Mac's look on macOS 26 and later: a cream tile with an ink duck in light mode, an ink tile with a cream duck in dark, and the clear and tinted styles too. Before, macOS darkened the icon on its own and the duck all but disappeared into it.</li>
+      <li>Duck's mark stays where you put it. Restarting the Mac, waking it from sleep, or plugging a monitor in or out no longer moves it to another place in the menu bar.</li>
+      <li>Icons you want to keep showing no longer end up on the hiding side after a monitor change, and icons no longer get stuck next to the mark where they cannot hide.</li>
+      <li>Duck waits for the menu bar to finish loading at login instead of giving up and starting from a default spot.</li>
     </ul>
       ]]></description>
-      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.1/Duck.zip" length="3389277" type="application/octet-stream" sparkle:edSignature="cFNVQ9wCO0MgLE+x6TK3gBr+f9oXfbIVBuHH9WKq9ltcPoDJ6B91PN9NvTu2SqEnApkMXSnFHqfY8SqED3sLBg==" />
+      <enclosure url="https://github.com/hellodigitworks/Duck/releases/download/v1.1.2/Duck.zip" length="3391282" type="application/octet-stream" sparkle:edSignature="NbT0Dn86beWrEExWgk74WCXeImxC7KqiPDEzprsuYGd8DH0dmLzo2P07EYzqJfUwj8uYZfZwlPNc/afiuptrBg==" />
     </item>
   </channel>
 </rss>

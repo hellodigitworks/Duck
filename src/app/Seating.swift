@@ -17,6 +17,14 @@ import DuckCore
 ///
 /// So every name carries a seating number, and re-seating is: take the next number, write
 /// the positions, make the items again.
+///
+/// Re-seating is the last resort, not the routine. Each one is a fresh name, and a fresh
+/// name lands wherever the bar happens to have room at that moment, which is the mark
+/// moving. So a launch keeps the names from last time while macOS still knows them, and
+/// macOS puts them back where they were. A re-seat aims at the slot macOS has on record
+/// for the mark, which it rewrites when the mark is ⌘-dragged, never at a pixel: pixels
+/// mean something different on every screen, and aiming at them walked the seat to the
+/// edge of its range.
 enum Seating {
     private static let prefix = "NSStatusItem Preferred Position "
 
@@ -37,6 +45,20 @@ enum Seating {
     /// icon that hides is on the near side of it. Measured on macOS 27, anything past about
     /// 340 lands on the same leftmost slot.
     static let edgePosition: Double = 400
+
+    /// True when macOS has a slot on record for this name.
+    static func isKnown(_ name: String) -> Bool {
+        UserDefaults.standard.object(forKey: prefix + name) != nil
+    }
+
+    /// The slot macOS has on record for a name. macOS writes this itself when an item is
+    /// ⌘-dragged, so for the mark it is where the person last put it.
+    static func position(of name: String) -> Double? {
+        guard let value = UserDefaults.standard.object(forKey: prefix + name) else { return nil }
+        if let number = value as? NSNumber { return number.doubleValue }
+        if let text = value as? String { return Double(text) }
+        return nil
+    }
 
     /// Asks macOS for one slot, for an item that sits away from the block.
     static func claimOne(_ name: String, at position: Double) {

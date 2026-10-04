@@ -4,6 +4,12 @@ Every release of Duck, newest first.
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-04
+### Fixed
+- Duck's mark stays where you put it. Restarting the Mac, waking it from sleep, or plugging a monitor in or out no longer moves it to another place in the menu bar.
+- Icons you want to keep showing no longer end up on the hiding side after a monitor change, and icons no longer get stuck next to the mark where they cannot hide.
+- Duck waits for the menu bar to finish loading at login instead of giving up and starting from a default spot.
+
 ## [1.1.1] - 2026-09-25
 ### Fixed
 - Duck's icon follows the Mac's look on macOS 26 and later: a cream tile with an ink duck in light mode, an ink tile with a cream duck in dark, and the clear and tinted styles too. Before, macOS darkened the icon on its own and the duck all but disappeared into it.
