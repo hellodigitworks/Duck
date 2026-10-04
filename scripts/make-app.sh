@@ -8,9 +8,9 @@ cd "$(dirname "$0")/.."
 
 APP_NAME="Duck"
 BUNDLE_ID="com.hdw.duck"
-# One version, one place. The VERSION file at the project root is the source;
-# make-cask.py reads the built app, and the app itself reads the number back out
-# of its own Info.plist, so this is the only line that ever needs changing.
+# One version, one place. The VERSION file at the project root is the source, and
+# the app reads the number back out of its own Info.plist, so this is the only line
+# that ever needs changing.
 VERSION="$(tr -d ' \n' < VERSION)"
 SPARKLE_FRAMEWORK="$HOME/Library/Caches/duck-build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
 PUBLIC_UPDATE_KEY="wLpwGKikogE3sOXZGvFoZzMSYr540Ek4DQgAR3CpvS0="
@@ -173,7 +173,7 @@ for flag in "$@"; do
       echo "Installed: /Applications/$APP_NAME.app"
       ;;
     # The two files a release carries, both notarised. Duck.dmg is what people download
-    # from the site. Duck.zip is what Sparkle and Homebrew fetch. ditto keeps the bundle
+    # from the site. Duck.zip is what Sparkle fetches to update Duck. ditto keeps the bundle
     # intact, unlike plain zip. No version in either name, so the landing page's link to
     # the latest release never goes stale.
     --release)

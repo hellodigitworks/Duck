@@ -7,8 +7,8 @@ import DuckCore
 ///
 /// The releases are read from the CHANGELOG.md that make-app.sh copies into the bundle, so
 /// there is no network call, nothing to keep in step by hand, and the panel works with no
-/// signal. Someone who installed Duck with one line in Terminal, or through Homebrew, never
-/// sees a release page; this is the only place they are told what changed.
+/// signal. Nobody who downloads Duck from the site or updates it in the app ever sees a
+/// release page, so this is the only place they are told what changed.
 struct ReleaseNotesPanel: View {
     @ObservedObject var notes: ReleaseNotes
     let close: () -> Void

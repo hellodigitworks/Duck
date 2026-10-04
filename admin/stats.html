@@ -62,7 +62,7 @@
         <div class="card tile"><p class="label">Average a day, last 7 days</p><p class="value" id="avg7">0</p></div>
         <div class="card tile"><p class="label">Average a day, last 30 days</p><p class="value" id="avg30">0</p></div>
         <div class="card tile"><p class="label">Site downloads, all time</p><p class="value" id="dmg-total">0</p></div>
-        <div class="card tile"><p class="label">Terminal, Homebrew and updates, all time</p><p class="value" id="zip-total">0</p></div>
+        <div class="card tile"><p class="label">In-app updates, all time</p><p class="value" id="zip-total">0</p></div>
       </div>
 
       <figure class="card chart">
@@ -81,7 +81,7 @@
         </figcaption>
         <ul class="legend">
           <li><span class="key key-dmg"></span>Site download</li>
-          <li><span class="key key-zip"></span>Terminal, Homebrew and updates</li>
+          <li><span class="key key-zip"></span>In-app updates</li>
         </ul>
         <div class="plot" id="downloads-chart"></div>
         <details><summary>Show as table</summary><div class="table-wrap" id="downloads-table"></div></details>
@@ -107,7 +107,7 @@
         <summary>How this is counted</summary>
         <p>Every copy of Duck looks for an update once a day. The site counts each one as a Mac, using a code made from its network address that changes every day and cannot be turned back into the address. Nothing in Duck itself sends anything new.</p>
         <p>Macs sharing one network count as one. A Mac with automatic updates turned off is not counted. Weekly and monthly figures are daily averages, because the code changes each day and the same Mac cannot be followed across days.</p>
-        <p>Site downloads are the download button. Terminal, Homebrew and Duck's own updates all use one file, so they are counted together.</p>
+        <p>Site downloads are the download button, the only way to get Duck. In-app updates are Duck updating itself.</p>
       </details>
     </section>
   </main>

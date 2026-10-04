@@ -54,7 +54,7 @@
     if (!data.first) {
       const note = $('empty-downloads');
       note.hidden = !data.totals;
-      if (data.totals) note.textContent = `Downloads so far: ${number.format(data.totals.dmg)} from the site, ${number.format(data.totals.zip)} through Terminal, Homebrew and updates.`;
+      if (data.totals) note.textContent = `Downloads so far: ${number.format(data.totals.dmg)} from the site, ${number.format(data.totals.zip)} through in-app updates.`;
       show('empty');
       return;
     }
@@ -174,7 +174,7 @@
       parts: [{ cls: 'dmg', value: d.dmg || 0 }, { cls: 'zip', value: d.zip || 0 }],
       tip: d.dmg === null
         ? `<b>Not saved</b><br>${longDay(d.day)}`
-        : `<b>${number.format(d.dmg)}</b> site · <b>${number.format(d.zip)}</b> Terminal, Homebrew, updates<br>${longDay(d.day)}`,
+        : `<b>${number.format(d.dmg)}</b> site · <b>${number.format(d.zip)}</b> updates<br>${longDay(d.day)}`,
     })), 'Downloads each day, last 30 days');
   }
 
@@ -197,7 +197,7 @@
       rows.map((d) => `<tr><td>${longDay(d.day)}</td><td>${number.format(d.macs)}</td></tr>`).join('')
     }</tbody></table>`;
     const cell = (v) => (v === null ? '–' : number.format(v));
-    $('downloads-table').innerHTML = `<table><thead><tr><th>Day</th><th>Site</th><th>Terminal, Homebrew, updates</th></tr></thead><tbody>${
+    $('downloads-table').innerHTML = `<table><thead><tr><th>Day</th><th>Site</th><th>Updates</th></tr></thead><tbody>${
       rows.map((d) => `<tr><td>${longDay(d.day)}</td><td>${cell(d.dmg)}</td><td>${cell(d.zip)}</td></tr>`).join('')
     }</tbody></table>`;
   }

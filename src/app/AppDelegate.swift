@@ -41,8 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// window with what changed. Once per version, and never on a fresh install: a list of
     /// changes to an app someone has never seen says nothing to them.
     ///
-    /// Duck installs with one line in Terminal or through Homebrew, so nobody ever passes a
-    /// release page on the way in. Without this, an update is silent.
+    /// The site's button downloads Duck straight from the latest release, and Duck updates
+    /// itself after that, so nobody ever passes a release page. Without this, an update is
+    /// silent.
     private func showNotesAfterAnUpdate() {
         let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
         let show = Preferences.shouldShowNotes(current: current,

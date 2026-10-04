@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS salts (
 );
 
 -- GitHub's all-time download totals, saved once a day. The difference between two
--- days is that day's downloads. `dmg` is the site's download button. `zip` is shared
--- by Homebrew, the one-line Terminal install and Duck's own in-app updates.
+-- days is that day's downloads. `dmg` is the site's download button, the only way to
+-- get Duck. `zip` is Duck updating itself.
 CREATE TABLE IF NOT EXISTS downloads (
   day      TEXT PRIMARY KEY,
   dmg      INTEGER,
