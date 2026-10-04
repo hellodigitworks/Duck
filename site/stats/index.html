@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Duck stats</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#F4EFE6" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14120F" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
+
+  <link rel="icon" href="/images/favicon.svg?v=4" type="image/svg+xml" />
+  <link rel="icon" href="/images/favicon-32.png?v=3" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png?v=3" />
+
+  <link rel="preload" href="/fonts/exposure-30.otf" as="font" type="font/otf" crossorigin />
+  <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/stats/stats.css?v=1" />
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <div>
+        <p class="eyebrow">Duck</p>
+        <h1>Numbers</h1>
+      </div>
+      <button class="refresh" type="button" id="refresh" aria-label="Load the latest numbers">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>
+      </button>
+    </header>
+    <p class="updated" id="updated" aria-live="polite">Loading…</p>
+
+    <!-- Loading: the same shapes as what is coming. -->
+    <section id="loading" class="stack" aria-hidden="true">
+      <div class="card hero"><div class="sk sk-label"></div><div class="sk sk-hero"></div><div class="sk sk-label"></div></div>
+      <div class="tiles">
+        <div class="card tile"><div class="sk sk-label"></div><div class="sk sk-num"></div></div>
+        <div class="card tile"><div class="sk sk-label"></div><div class="sk sk-num"></div></div>
+        <div class="card tile"><div class="sk sk-label"></div><div class="sk sk-num"></div></div>
+        <div class="card tile"><div class="sk sk-label"></div><div class="sk sk-num"></div></div>
+      </div>
+      <div class="card"><div class="sk sk-label"></div><div class="sk sk-chart"></div></div>
+    </section>
+
+    <section id="error" class="card note" hidden>
+      <h2>The numbers did not load</h2>
+      <p id="error-detail">Something went wrong reaching the site.</p>
+      <button class="button" type="button" id="retry">Try again</button>
+    </section>
+
+    <section id="empty" class="card note" hidden>
+      <h2>Nothing counted yet</h2>
+      <p>Every copy of Duck looks for an update once a day. The first Mac shows up here the next time one does, usually within a day of this going live.</p>
+      <p id="empty-downloads" hidden></p>
+    </section>
+
+    <section id="full" class="stack" hidden>
+      <div class="card hero">
+        <p class="label">Macs that ran Duck today</p>
+        <p class="hero-value" id="today">0</p>
+        <p class="sub" id="today-sub"></p>
+      </div>
+
+      <div class="tiles">
+        <div class="card tile"><p class="label">Average a day, last 7 days</p><p class="value" id="avg7">0</p></div>
+        <div class="card tile"><p class="label">Average a day, last 30 days</p><p class="value" id="avg30">0</p></div>
+        <div class="card tile"><p class="label">Site downloads, all time</p><p class="value" id="dmg-total">0</p></div>
+        <div class="card tile"><p class="label">Terminal, Homebrew and updates, all time</p><p class="value" id="zip-total">0</p></div>
+      </div>
+
+      <figure class="card chart">
+        <figcaption>
+          <h2>Macs each day</h2>
+          <p class="sub">Last 30 days. Today is still counting.</p>
+        </figcaption>
+        <div class="plot" id="macs-chart"></div>
+        <details><summary>Show as table</summary><div class="table-wrap" id="macs-table"></div></details>
+      </figure>
+
+      <figure class="card chart">
+        <figcaption>
+          <h2>Downloads each day</h2>
+          <p class="sub">Last 30 days, from GitHub's daily totals.</p>
+        </figcaption>
+        <ul class="legend">
+          <li><span class="key key-dmg"></span>Site download</li>
+          <li><span class="key key-zip"></span>Terminal, Homebrew and updates</li>
+        </ul>
+        <div class="plot" id="downloads-chart"></div>
+        <details><summary>Show as table</summary><div class="table-wrap" id="downloads-table"></div></details>
+      </figure>
+
+      <figure class="card chart">
+        <figcaption>
+          <h2>Versions</h2>
+          <p class="sub">Share of Macs on each version, last 7 days.</p>
+        </figcaption>
+        <ol class="bars" id="versions"></ol>
+      </figure>
+
+      <figure class="card chart">
+        <figcaption>
+          <h2>Countries</h2>
+          <p class="sub">Share of Macs, last 30 days.</p>
+        </figcaption>
+        <ol class="bars" id="countries"></ol>
+      </figure>
+
+      <details class="card how">
+        <summary>How this is counted</summary>
+        <p>Every copy of Duck looks for an update once a day. The site counts each one as a Mac, using a code made from its network address that changes every day and cannot be turned back into the address. Nothing in Duck itself sends anything new.</p>
+        <p>Macs sharing one network count as one. A Mac with automatic updates turned off is not counted. Weekly and monthly figures are daily averages, because the code changes each day and the same Mac cannot be followed across days.</p>
+        <p>Site downloads are the download button. Terminal, Homebrew and Duck's own updates all use one file, so they are counted together.</p>
+      </details>
+    </section>
+  </main>
+
+  <div class="tip" id="tip" role="status" hidden></div>
+
+  <script src="/stats/stats.js?v=1" defer></script>
+</body>
+</html>

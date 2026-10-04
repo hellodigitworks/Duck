@@ -11,3 +11,12 @@
 name = "tuck"
 pages_build_output_dir = "."
 compatibility_date = "2026-08-01"
+
+# Duck's numbers: update checks and daily download totals, read by /stats.
+# scripts/make-stats-db.sh creates the database and writes its id here. Until then the
+# placeholder only works for local testing, and the site counts nothing.
+[[d1_databases]]
+binding = "DB"
+database_name = "duck-stats"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

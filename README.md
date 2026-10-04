@@ -147,6 +147,23 @@ changed, and the old one sends people on. Deploy from that folder:
 npx wrangler pages deploy . --project-name tuck --branch main
 ```
 
+## Stats
+
+`duck.hellodigitworks.com/stats` shows how many Macs ran Duck each day, downloads per
+day, the version split and countries. Duck itself sends nothing new: the site counts the
+daily update check every copy already makes (`site/functions/appcast.xml.js`), and saves
+GitHub's download totals once a day. Each Mac is a hash of its network address with a
+salt that is deleted the next day, so no address is kept and no Mac can be followed
+across days. The numbers live in a free Cloudflare D1 database called duck-stats.
+
+Set up once, before the next deploy of `site/`:
+
+1. `zsh scripts/make-stats-db.sh` creates the database and writes its id into
+   `site/wrangler.toml`.
+2. In the Cloudflare dashboard, Zero Trust > Access > Applications, add a self-hosted
+   application for `duck.hellodigitworks.com/stats` with a policy that allows only your
+   email. The page answers on no other address, so the lock cannot be walked around.
+
 ## Folders
 
 | Folder | What |
