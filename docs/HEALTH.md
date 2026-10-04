@@ -1,12 +1,12 @@
 # Duck health
-Updated 2026-10-03 by Yard
-Status: GREEN, in sync, clean.
-Checked: 2026-10-03 00:06 IST, Yard. Live pass: nothing changed on this app once three network timeouts were retried and answered 200. Screenshots opened by eye at both widths as two contact sheets: nothing blank or broken. The Open checks run: 14 pass, 2 fail, both waiting on Swayam, no regressions. No new commits.
-Previous: 2026-10-02 00:08 IST, Yard.
+Updated 2026-10-05 by Yard
+Status: GREEN, in sync. Duck 1.1.2 and a private stats page arrived on 4 October, deployed the same afternoon.
+Checked: 2026-10-05 00:04 IST, Yard. Live pass: no RED anywhere, the accepted AMBERs unchanged. Screenshots opened by eye at both widths as two contact sheets: nothing blank or broken. The Open checks run: 15 pass, 2 fail, both waiting on Swayam, no regressions. Seven new commits, reviewed below. The 4 October run did not finish (network and Drive stalling), so this follows the 3 October record.
+Previous: 2026-10-03 00:06 IST, Yard.
 25 September: tier 2 by Swayam's decision.
 
 ## Release
-**Duck 1.1.1 is the latest.** Signed with the Developer ID (Swayam Bhansali, 3NLU2459VW), notarised by Apple and stapled. 1.1.0 went out earlier the same day as the first signed release.
+**Duck 1.1.2 is the latest** (`af73383`, 4 October: the mark stays where you put it). The table below is from the 1.1.1 release and was not re-checked tonight. Signed with the Developer ID (Swayam Bhansali, 3NLU2459VW), notarised by Apple and stapled. 1.1.0 went out earlier the same day as the first signed release.
 
 | File | Result | Note |
 |---|---|---|
@@ -27,23 +27,30 @@ The GitHub repository is public, so anyone can download without an account.
 Screenshot looked at, desktop and phone: "A quieter menu bar.", the menu-bar illustration, the Download for Mac button, and "macOS 13 or later, Apple silicon. Free." under it. The button links to the DMG. The Terminal one-liner and the install clip are gone from the page. `install.sh` stays live so old links still work.
 
 ## Branches
-No branches besides main. Working tree clean.
+| Branch | Verdict | What it is for | What happens next |
+|---|---|---|---|
+| claude/active-users-devices-dashboard-a31160 | merged-empty, **held** | identical to main | nothing tonight: a live Claude session has its working folder in this worktree, so removing it would pull the floor from under it |
+| claude/icon-position-inconsistency-dd9674 | merged, **held** | fully contained in main, 5 behind | nothing tonight, same reason |
+
+Both are Yard's to delete once no session is sitting in them.
 
 ## Deploy state
-**In sync.** Every commit is on origin. The live homepage, `appcast.xml`, `sw.js` and `duck.css` hash identical to the folder's.
+**In sync.** Production deployment `3b080b6f` is at `2d4b1b9`, local main's tip, about 14:45 IST on 4 October. Working tree clean.
 
 ## Open issues
 - **Exposure font licence.** The app ships `ExposureTrial-30.otf`, the trial. Swayam chose to ship it for now. Buy the licence before Duck gets wider attention.
 
 ## Reviewed changes
-Four commits since the last run, all made with Swayam on 25 September.
+Seven commits on 4 October.
 
-- `aa6e594` signed with Developer ID, notarised, a designed DMG. **ok.** `site/sw.js` cache bumped to `duck-v7`.
-- `c5d8e20` the update feed points at the notarised 1.1.0 zip. **ok.**
-- `34b6352` 1.1.1, an icon macOS 26 draws in dark mode, and the unused install clip is gone from the site. **ok.** Answers his report of 25 September, now the `duck` check in `checks.md`, passing.
-- `c51a801` health record. **ok.**
+- `8cfb86d` keep the mark in place across restarts, sleep and monitor changes. **ok**, Swift, not built tonight.
+- `af73383` 1.1.2 version and changelog. **ok.**
+- `ce0ee89` update feed offers 1.1.2. **ok.**
+- `7ddfb8d`, `eed612b` a stats database: each update check is counted as a hash of the address and browser with a salt that is thrown away every day, so yesterday's Macs cannot be traced. **ok.** No address is stored.
+- `415123d` the stats page moves off the live site into `admin/stats.html`, reading `/api/stats` with a key. **ok.** The key is compared in constant time, lives only in a Pages secret and a gitignored local file, and is never printed. `site/sw.js` cache bumped.
+- `2d4b1b9` the DMG is the only way to get Duck: `install.sh` and the Homebrew cask script removed. **ok.** Old links to `install.sh` now 404, by his choice.
 
-No secret-looking string. Notarising uses a keychain profile, no password in the repo.
+No `console.log`, no secret, no wrong host.
 
 ## How a release goes now
 `zsh scripts/make-app.sh --release` signs, sends the app and the DMG to Apple, staples both, and writes `build/Duck.dmg` and `build/Duck.zip`. Notarising uses the keychain profile `duck-notary`, made from the same App Store Connect team key FieldCut uses. No Apple ID password is involved.
