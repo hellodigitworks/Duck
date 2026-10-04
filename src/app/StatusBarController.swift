@@ -64,6 +64,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// True while the items are being made again, so nothing reads half a menu bar.
     private var reseating = false
     private var reseatWork: DispatchWorkItem?
+    /// True from a screen change or a wake until the bar has been quiet for a while. The
+    /// positions read in that window are half laid out, and re-seating on them is what
+    /// used to move the mark after every sleep and every monitor.
+    private var barSettling = false
+    private var settleWork: DispatchWorkItem?
+    /// Whether the icons were hidden when the settling began, so they hide again after.
+    private var settleWantsHide = false
+    private static let settleDelay = 3.0
     private var autoHideTimer: Timer?
     private var rolesRefresh: DispatchWorkItem?
     private var rampToken = 0
@@ -83,17 +91,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         self.preferences = preferences
         self.checkForUpdates = checkForUpdates
 
-        // Seated fresh on every launch, so the five always come back as one unbroken run
-        // with the mark on its right end. Names carry the seating number because macOS only
-        // honours a position for a name it has never seen.
-        preferences.seating += 1
-        let names = Seating.names(
-            spacers: StatusBarController.spacerCount(for: NSScreen.screens),
-            seating: preferences.seating)
+        // The names from last time while macOS still has a slot on record for every one of
+        // them, so the mark comes back exactly where it was. A fresh seating only on the
+        // first launch, or when the count of spacers has changed. Names carry the seating
+        // number because macOS only honours a position for a name it has never seen.
+        let spacerCount = StatusBarController.spacerCount(for: NSScreen.screens)
+        var names = Seating.names(spacers: spacerCount, seating: preferences.seating)
+        let kept = preferences.seating > 0 && names.allSatisfy(Seating.isKnown)
+        if !kept {
+            preferences.seating += 1
+            names = Seating.names(spacers: spacerCount, seating: preferences.seating)
+            Seating.claim(names, from: preferences.seat)
+        }
+        // macOS drops the line's slot while it is hidden, so it may need asking for again.
         let edgeName = Seating.name("edge", seating: preferences.seating)
-        Seating.claim(names, from: preferences.seat)
-        Seating.claimOne(edgeName, at: Seating.edgePosition)
+        if !Seating.isKnown(edgeName) {
+            Seating.claimOne(edgeName, at: Seating.edgePosition)
+        }
         seatedNames = names + [edgeName]
+        Seating.forget(keeping: seatedNames)
         let made = StatusBarController.makeItems(named: names)
         items = made
         mark = made[0]
@@ -102,13 +118,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         super.init()
 
         readWidthHolders()
-        Log.note("Launched \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") on macOS \(ProcessInfo.processInfo.operatingSystemVersionString), screens \(NSScreen.screens.map { Int($0.frame.width) }), \(spacers.count) spacers, seat \(Int(preferences.seat)) at seating \(preferences.seating)")
+        Log.note("Launched \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") on macOS \(ProcessInfo.processInfo.operatingSystemVersionString), screens \(NSScreen.screens.map { Int($0.frame.width) }), \(spacers.count) spacers, seat \(Int(preferences.seat)) at seating \(preferences.seating), \(kept ? "kept from last time" : "new")")
         configureRoles()
         observePreferences()
 
         NotificationCenter.default.addObserver(
             self, selector: #selector(screenParametersChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(macWoke),
+            name: NSWorkspace.didWakeNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(macWoke),
+            name: NSWorkspace.screensDidWakeNotification, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(someWindowMoved(_:)),
             name: NSWindow.didMoveNotification, object: nil)
@@ -166,48 +188,43 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         return true
     }
 
-    /// Where the mark sits now. The number a re-seating tries to land back on.
+    /// Where the mark sits now, or nil while the bar has not laid it out yet.
     private var markX: CGFloat? {
         guard let x = mark.button?.window?.frame.origin.x, x > 0 else { return nil }
         return x
     }
 
     /// Called whenever the bar may have moved under us. A whole block needs nothing.
-    private func reseatIfBroken() {
-        guard !isCollapsed, !reseating, !blockIsWhole else { return }
-        guard let target = markX else {
-            // Nothing of Duck's is on the bar at all. Start again from a seat known to draw,
-            // rather than aiming at a mark that is not there.
+    ///
+    /// A bar that has not drawn Duck yet is not a broken one. At login and on wake the
+    /// items can be missing for seconds, and starting over then threw away the place the
+    /// person had chosen. Only `giveUpWaiting` falls back to a seat known to draw.
+    private func reseatIfBroken(giveUpWaiting: Bool = false) {
+        guard !isCollapsed, !reseating, !barSettling, !blockIsWhole else { return }
+        guard markX != nil else {
+            guard giveUpWaiting else { return }
             preferences.seat = Seating.fallback
-            Log.note("Nothing on the bar. Seating again from \(Int(Seating.fallback)).")
-            reseat(target: nil)
+            Log.note("Nothing on the bar after waiting. Seating again from \(Int(Seating.fallback)).")
+            reseat()
             return
         }
-        Log.note("Block broken, seating again onto x=\(Int(target)): \(layoutDescription())")
-        reseat(target: target)
+        Log.note("Block broken, seating again: \(layoutDescription())")
+        reseat()
     }
 
     /// Seats being tried, in order, until the five come back as one run.
     private var seatQueue: [Double] = []
-    /// The last seat that did come back whole, to fall back on if a correction spoils it.
-    private var wholeSeat: Double?
-    private var seatTarget: CGFloat?
-    private var seatCorrections = 0
 
-    /// Puts the block back together, aiming to leave the mark where it already is.
+    /// Puts the block back together where the mark already is.
     ///
-    /// Two things can go wrong and they pull opposite ways. The seat may be crowded, another
-    /// app holding a slot inside Duck's range, and the answer is to step sideways. Or the
-    /// block may come back whole but in the wrong place, and the answer is to move the seat
-    /// towards where the mark was. Whole wins: a run in the wrong place still hides, a run
-    /// in pieces does not.
-    private func reseat(target: CGFloat?) {
+    /// The seat is the slot macOS has on record for the mark: where it was made, or where
+    /// it was last ⌘-dragged to. That is a place in the order of the bar, so it means the
+    /// same thing on every screen. If another app holds a slot inside the run, step
+    /// sideways until the five come back whole.
+    private func reseat() {
         guard !reseating else { return }
         reseating = true
-        seatTarget = target
-        seatCorrections = 0
-        wholeSeat = nil
-        let base = preferences.seat
+        let base = mark.autosaveName.flatMap(Seating.position(of:)) ?? preferences.seat
         seatQueue = [base, base + 8, base - 8, base + 16, base - 16, Seating.fallback, Seating.fallback + 40]
         takeNextSeat()
     }
@@ -251,26 +268,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Reads back what that seat actually did, and decides whether to try another.
     private func judge() {
         guard let landed = markX, blockIsWhole else {
-            if let good = wholeSeat {
-                // A correction broke a run that was already whole. Put the good one back.
-                Log.note("Correction spoiled the run. Back to seat \(Int(good)).")
-                seatQueue = []
-                wholeSeat = nil
-                seatCorrections = 99
-                settle(at: good)
-                return
-            }
             Log.note("Seat \(Int(preferences.seat)) did not come back whole: \(layoutDescription())")
             takeNextSeat()
-            return
-        }
-
-        if let target = seatTarget, abs(landed - target) > 16, seatCorrections < 2 {
-            wholeSeat = preferences.seat
-            seatCorrections += 1
-            let corrected = preferences.seat - Double(target - landed)
-            Log.note("Seat \(Int(preferences.seat)) landed the mark at x=\(Int(landed)), wanted \(Int(target)). Trying \(Int(corrected)).")
-            settle(at: corrected)
             return
         }
 
@@ -583,7 +582,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func someWindowMoved(_ notification: Notification) {
-        guard !isCollapsed, let window = notification.object as? NSWindow else { return }
+        guard !isCollapsed, !barSettling, let window = notification.object as? NSWindow else { return }
         if let index = items.firstIndex(where: { $0.button?.window === window }) {
             Log.note("Item \(index) moved to x=\(Int(window.frame.origin.x)) w=\(Int(window.frame.width))")
             scheduleRolesRefresh()
@@ -632,7 +631,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     func collapse() {
         guard !isCollapsed else { return }
-        guard !reseating else { return }
+        guard !reseating, !barSettling else { return }
         guard assignRoles() else {
             Log.note("Not hiding yet: the menu bar has not settled. \(layoutDescription())")
             return
@@ -660,10 +659,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         Log.note("Showing: \(layoutDescription())")
     }
 
+    /// Half a second apart, so about eight seconds for the bar to show up after login.
+    private static let launchAttempts = 16
+
     private func prepareAfterLaunch(attempt: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self, !self.isCollapsed else { return }
-            if self.reseating {
+            if self.reseating || self.barSettling {
                 self.prepareAfterLaunch(attempt: attempt)
             } else if self.assignRoles(), self.blockIsWhole {
                 if AutoHideSchedule.shouldScheduleAfterLaunch(
@@ -674,8 +676,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 } else {
                     Log.note("Launch: staying open until a manual hide or enabled auto-hide. \(self.layoutDescription())")
                 }
-            } else if attempt < 6 {
-                self.reseatIfBroken()
+            } else if attempt < Self.launchAttempts {
+                // At login the bar can take a few seconds to draw anything. Wait for it
+                // rather than starting over from a default seat.
+                self.reseatIfBroken(giveUpWaiting: attempt == Self.launchAttempts - 1)
                 self.prepareAfterLaunch(attempt: attempt + 1)
             } else {
                 Log.note("Launch: the menu bar never settled. Leaving controls visible. \(self.layoutDescription())")
@@ -728,26 +732,65 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func screenParametersChanged() {
         Log.note("Screens changed to \(NSScreen.screens.map { Int($0.frame.width) }): one item may now take \(Int(self.widthCeiling))pt")
-        guard isCollapsed else {
-            applyLayout()
-            return
-        }
-        // Plug in a different display and the hide is still the one measured for the old
-        // bar. Let everything back out and hide again once the new bar has settled.
-        isCollapsed = false
-        applyLayout()
-        hideAgainAfterScreenChange(attempt: 0)
+        waitForBarToSettle()
     }
 
-    private func hideAgainAfterScreenChange(attempt: Int) {
+    /// A hide that is in place survives a wake on the same screens, so only a showing bar
+    /// needs protecting. A wake that changes the screens also sends a screen change.
+    @objc private func macWoke() {
+        guard !isCollapsed else { return }
+        Log.note("Mac woke. Waiting for the bar to settle.")
+        waitForBarToSettle()
+    }
+
+    /// A monitor plugged in or out, or a wake from sleep, sends a burst of changes over a
+    /// second or two, and the bar is half laid out the whole time. Let everything back out,
+    /// do nothing until it has been quiet for a few seconds, then put the spacers back to
+    /// their single point, check the block, and hide again if it was hidden.
+    private func waitForBarToSettle() {
+        let wasHidden = isCollapsed || settleWantsHide
+        settleWantsHide = wasHidden
+        barSettling = true
+        rolesRefresh?.cancel()
+        autoHideTimer?.invalidate()
+        if isCollapsed {
+            // The hide was measured for the old bar.
+            isCollapsed = false
+        }
+        applyLayout()
+
+        settleWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.barSettling = false
+            self.settleWantsHide = false
+            // Fresh layout pass on the settled bar: the spacers' windows are sized by
+            // hand, and a size set during the change can leave them drawn in the wrong
+            // place until it is set again.
+            self.applyLayout()
+            Log.note("Bar settled on \(NSScreen.screens.map { Int($0.frame.width) }): \(self.layoutDescription())")
+            self.checkAfterSettling(hideAgain: wasHidden, attempt: 0)
+        }
+        settleWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.settleDelay, execute: work)
+    }
+
+    private func checkAfterSettling(hideAgain: Bool, attempt: Int) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self, !self.isCollapsed else { return }
-            if self.assignRoles() {
-                self.collapse()
+            guard let self, !self.isCollapsed, !self.barSettling else { return }
+            if self.reseating {
+                self.checkAfterSettling(hideAgain: hideAgain, attempt: attempt)
+            } else if self.assignRoles(), self.blockIsWhole {
+                if hideAgain {
+                    self.collapse()
+                } else {
+                    self.scheduleAutoHideIfNeeded()
+                }
             } else if attempt < 6 {
-                self.hideAgainAfterScreenChange(attempt: attempt + 1)
+                self.reseatIfBroken(giveUpWaiting: attempt == 5)
+                self.checkAfterSettling(hideAgain: hideAgain, attempt: attempt + 1)
             } else {
-                Log.note("Did not hide after the screen changed: the menu bar never settled.")
+                Log.note("Did not hide after the bar changed: it never settled. \(self.layoutDescription())")
             }
         }
     }
