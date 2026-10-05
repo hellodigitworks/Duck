@@ -1,8 +1,8 @@
 # Duck health
-Updated 2026-10-05 by Yard
+Updated 2026-10-06 by Yard
 Status: GREEN, in sync. Duck 1.1.2 and a private stats page arrived on 4 October, deployed the same afternoon.
-Checked: 2026-10-05 00:04 IST, Yard. Live pass: no RED anywhere, the accepted AMBERs unchanged. Screenshots opened by eye at both widths as two contact sheets: nothing blank or broken. The Open checks run: 15 pass, 2 fail, both waiting on Swayam, no regressions. Seven new commits, reviewed below. The 4 October run did not finish (network and Drive stalling), so this follows the 3 October record.
-Previous: 2026-10-03 00:06 IST, Yard.
+Checked: 2026-10-06 00:04 IST, Yard. Live pass: no RED from the address check, the accepted AMBERs unchanged. Screenshots opened by eye at both widths as two contact sheets: nothing blank or broken. The Open checks run: 15 pass, 2 fail, both waiting on Swayam, no regressions. No new commits. The two merged agent worktrees and their branch refs were removed tonight.
+Previous: 2026-10-05 00:04 IST, Yard.
 25 September: tier 2 by Swayam's decision.
 
 ## Release
@@ -27,12 +27,7 @@ The GitHub repository is public, so anyone can download without an account.
 Screenshot looked at, desktop and phone: "A quieter menu bar.", the menu-bar illustration, the Download for Mac button, and "macOS 13 or later, Apple silicon. Free." under it. The button links to the DMG. The Terminal one-liner and the install clip are gone from the page. `install.sh` stays live so old links still work.
 
 ## Branches
-| Branch | Verdict | What it is for | What happens next |
-|---|---|---|---|
-| claude/active-users-devices-dashboard-a31160 | merged-empty, **held** | identical to main | nothing tonight: a live Claude session has its working folder in this worktree, so removing it would pull the floor from under it |
-| claude/icon-position-inconsistency-dd9674 | merged, **held** | fully contained in main, 5 behind | nothing tonight, same reason |
-
-Both are Yard's to delete once no session is sitting in them.
+No branches besides main. `claude/active-users-devices-dashboard-a31160` (tip `2d4b1b9`) and `claude/icon-position-inconsistency-dd9674` (tip `ce0ee89`) were removed by Yard on 6 October: both fully contained in main, both worktrees clean, and no process had its working folder in either. `git worktree remove`, then `git branch -d`.
 
 ## Deploy state
 **In sync.** Production deployment `3b080b6f` is at `2d4b1b9`, local main's tip, about 14:45 IST on 4 October. Working tree clean.
