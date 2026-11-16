@@ -17,3 +17,7 @@
 # Fonts never change under the same name.
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The stylesheet is always asked for with a ?v= number, so a copy can be kept for good.
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
