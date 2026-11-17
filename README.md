@@ -130,11 +130,15 @@ before a release ships it.
 
 `site/` is duck.hellodigitworks.com: one page, no build step, its own Cloudflare Pages
 project. The project kept its first name, tuck, when the app became Duck; only the address
-changed, and the old one sends people on. Deploy from that folder:
+changed, and the old one sends people on. Deploy from the top folder, the one holding
+`wrangler.toml`, so the server functions in `functions/` go up with the page:
 
 ```bash
-npx wrangler pages deploy . --project-name tuck --branch main
+npx wrangler pages deploy site --project-name tuck --branch main
 ```
+
+`wrangler.toml`, `functions/` and `migrations/` sit beside `site/` on purpose. Anything
+inside `site/` is public.
 
 ## Stats
 
@@ -143,7 +147,7 @@ split and countries. Open it from the Mac by double-click. It is never deployed:
 sits outside `site/`, which is the only folder that goes live.
 
 Duck itself sends nothing new. The site counts the daily update check every copy already
-makes (`site/functions/appcast.xml.js`) and saves GitHub's download totals once a day.
+makes (`functions/appcast.xml.js`) and saves GitHub's download totals once a day.
 Each Mac is a hash of its network address with a salt that is deleted the next day, so
 no address is kept and no Mac can be followed across days. The numbers live in a free
 Cloudflare D1 database called duck-stats, made by `scripts/make-stats-db.sh`.

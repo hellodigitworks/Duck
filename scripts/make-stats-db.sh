@@ -3,11 +3,11 @@
 #
 #   zsh scripts/make-stats-db.sh
 #
-# Makes a free D1 database called duck-stats, writes its id into site/wrangler.toml and
+# Makes a free D1 database called duck-stats, writes its id into wrangler.toml and
 # sets up its tables. Running it again is safe: an existing database is reused and the
 # tables are only made if missing. Needs `wrangler login` done first.
 set -euo pipefail
-cd "$(dirname "$0")/../site"
+cd "$(dirname "$0")/.."
 
 NAME="duck-stats"
 

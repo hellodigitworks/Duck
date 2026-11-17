@@ -2,14 +2,16 @@
 #
 # The project kept its first name, tuck, when the app became Duck. Only the address
 # changed: duck.hellodigitworks.com is attached to it, and the old tuck address redirects.
-# Deploying from this folder:
-#   npx wrangler pages deploy . --project-name tuck --branch main
+# This file, functions/ and migrations/ sit beside site/, not inside it, so none of them
+# is ever served to a visitor. Deploying, from this folder (the one holding this file):
+#   npx wrangler pages deploy site --project-name tuck --branch main
+# Run it from anywhere else and the server functions are left out without a warning.
 #
 # Attach an address to the project once, in the Cloudflare dashboard under
 # Pages > tuck > Custom domains. Nothing here does that for you.
 
 name = "tuck"
-pages_build_output_dir = "."
+pages_build_output_dir = "site"
 compatibility_date = "2026-08-01"
 
 # Duck's numbers: update checks and daily download totals, read by /stats.
